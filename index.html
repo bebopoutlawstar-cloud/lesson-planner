@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Gradual-release lesson planner: I Do, We Do, You Do with Kagan strategies, exports to Excel and printable PDF.">
+<title>Eggly Lesson Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,600;1,700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#EBEFF4; --ink:#17202B; --ink-2:#465264;
+  --muted:#778396; --line:#D7DDE5; --focus:#2563EB;
+  --kagan:#E65100; --special:#E65100; --special-soft:#FFF3E0;
+  --ok:#2E7D32; --err:#C62828;
+  --t-dark:#2E5395; --t-mid:#3B6BC7; --t-light:#E7ECF5; --t-border:#AEC6E8;
+  --t-ink:var(--t-dark);
+  --t-wash:var(--t-light);
+  --paper:#FFFFFF;
+  --shadow:0 1px 2px rgba(20,30,50,.06),0 8px 24px rgba(20,30,50,.07);
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F1318; --surface:#161B22; --surface-2:#1E252E; --ink:#E5E9EF; --ink-2:#AEB7C4;
+    --muted:#7E8898; --line:#2B333E; --focus:#7AA7FF; --special-soft:#3A2412; --kagan:#FF8A3D;
+    --t-ink:var(--t-border); --t-wash:color-mix(in srgb,var(--t-mid) 20%,#161B22);
+    --paper:#1A2028; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1318; --surface:#161B22; --surface-2:#1E252E; --ink:#E5E9EF; --ink-2:#AEB7C4;
+  --muted:#7E8898; --line:#2B333E; --focus:#7AA7FF; --special-soft:#3A2412; --kagan:#FF8A3D;
+  --t-ink:var(--t-border); --t-wash:color-mix(in srgb,var(--t-mid) 20%,#161B22);
+  --paper:#1A2028; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+
+.app{max-width:1500px;margin:0 auto;padding-inline:16px;padding-block:14px 40px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:4px 14px}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:38px;height:38px;border-radius:10px;background:var(--t-dark);display:grid;place-items:center;transition:background .3s}
+.mark svg{display:block}
+.brand-name{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:-.01em;line-height:1.1}
+.brand-sub{color:var(--muted);font-size:13px}
+.status{font-size:13px;color:var(--ink-2);display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+.status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.status[data-s="saved"]::before{background:var(--ok)}
+.status[data-s="saving"]::before{background:#E0A100}
+.status[data-s="error"]::before{background:var(--err)}
+.status[data-s="local"]::before{background:#E0A100}
+
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:20px;align-items:start}
+.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;flex-direction:column;gap:10px}
+.side-label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:6px}
+.plan-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.plan-list button{width:100%;text-align:left;border:1px solid transparent;background:none;border-radius:10px;padding:9px 10px;cursor:pointer;display:grid;grid-template-columns:10px 1fr;gap:4px 10px;align-items:center}
+.plan-list button:hover{background:var(--surface)}
+.plan-list button[aria-current="true"]{background:var(--surface);border-color:var(--line);box-shadow:var(--shadow)}
+.plan-list .dot{width:10px;height:10px;border-radius:3px}
+.plan-list .pt{font-weight:600;font-size:14px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plan-list .pm{grid-column:2;font-size:12px;color:var(--muted)}
+
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 13px;font-weight:600;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;line-height:1.2;white-space:nowrap}
+.btn:hover{border-color:var(--t-mid)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.primary{background:var(--t-dark);border-color:var(--t-dark);color:#fff}
+.btn.primary:hover{filter:brightness(1.1)}
+.btn.ghost{background:none;border-color:transparent;color:var(--ink-2)}
+.btn.ghost:hover{background:var(--surface-2)}
+.btn.danger{color:var(--err)}
+.btn.danger-solid{background:var(--err);border-color:var(--err);color:#fff}
+.btn.claude{border-color:color-mix(in srgb,var(--t-mid) 45%,var(--line))}
+.btn svg{flex:none}
+
+/* plan header */
+.plan-head{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow)}
+.ph-row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.plan-head input.title-input{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.015em;border:0;background:none;padding:2px 0;min-width:0;flex:1 1 320px;border-bottom:2px solid transparent;border-radius:0}
+.plan-head input.title-input:hover{border-bottom-color:var(--line)}
+.plan-head input.title-input:focus{outline:none;border-bottom-color:var(--t-mid);box-shadow:none;background:none}
+.subjects{display:flex;gap:6px;flex-wrap:wrap}
+.subj{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px 6px 9px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.subj i{width:11px;height:11px;border-radius:50%;display:block}
+.subj[aria-checked="true"]{background:var(--t-wash);border-color:var(--t-mid);color:var(--t-ink)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.details summary{cursor:pointer;color:var(--ink-2);font-size:13px;font-weight:600;list-style:none;display:inline-flex;align-items:center;gap:6px}
+.details summary::-webkit-details-marker{display:none}
+.details summary::before{content:"";width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+.details[open] summary::before{transform:rotate(45deg)}
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:10px}
+.confirm{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--ink-2);flex-wrap:wrap}
+
+/* day tabs */
+.tabs-row{display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;flex:1 1 auto;min-width:0;scrollbar-width:thin}
+.tab{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;cursor:pointer;text-align:left;flex:none;display:flex;flex-direction:column;gap:1px;min-width:92px;position:relative}
+.tab .tw{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.tab .td{font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.tab .tl{font-size:12px;color:var(--ink-2);max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tab[aria-selected="true"]{background:var(--t-dark);border-color:var(--t-dark);color:#fff}
+.tab[aria-selected="true"] .tw,.tab[aria-selected="true"] .tl{color:rgba(255,255,255,.8)}
+.tab.special::after{content:"";position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--special)}
+.add-day{border-style:dashed}
+.view-toggle{display:none;background:var(--surface-2);border-radius:10px;padding:3px;gap:2px}
+.view-toggle button{border:0;background:none;border-radius:8px;padding:6px 14px;font-weight:600;font-size:13px;cursor:pointer;color:var(--ink-2)}
+.view-toggle button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+
+/* workspace */
+.work{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:12px;align-items:start}
+.editor{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.day-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.day-bar .grp{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.row2{display:grid;grid-template-columns:170px 1fr;gap:10px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label,.lab{font-size:12px;font-weight:700;color:var(--ink-2);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.field .opt{font-weight:500;color:var(--muted);font-size:11px}
+.field .hint{font-weight:500;color:var(--muted);font-size:11.5px}
+.field .hint code{font-family:var(--mono);font-size:11px;color:var(--kagan);background:var(--special-soft);padding:0 4px;border-radius:4px}
+input[type=text],input[type=date],textarea{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:8px 10px;font-size:14px;line-height:1.45}
+textarea{resize:vertical;min-height:40px;field-sizing:content;max-height:520px}
+input:focus,textarea:focus{outline:none;border-color:var(--t-mid);box-shadow:0 0 0 3px color-mix(in srgb,var(--t-mid) 22%,transparent);background:var(--surface)}
+.sec-head{display:flex;align-items:center;gap:10px;margin-top:6px}
+.sec-head h3{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--t-ink);font-family:var(--body);font-weight:700}
+.sec-head::after{content:"";height:1px;background:var(--line);flex:1}
+.check{display:inline-flex;gap:8px;align-items:center;font-size:13px;font-weight:600;cursor:pointer;padding:6px 10px;border-radius:9px;border:1px solid var(--line)}
+.check input{accent-color:var(--special);width:16px;height:16px}
+.check.on{background:var(--special-soft);border-color:var(--special);color:var(--special)}
+.note{font-size:13px;color:var(--ink-2);background:var(--surface-2);border-radius:9px;padding:8px 11px}
+.note.err{color:var(--err)}
+
+/* preview paper */
+.preview-wrap{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100vh - 24px);overflow:auto;border-radius:14px;scrollbar-width:thin}
+.paper{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);font-size:13px;line-height:1.5}
+.pp-head{background:var(--t-dark);color:#fff;padding:16px 20px 14px}
+.pp-head.special{background:var(--special)}
+.pp-kicker{font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.85;font-weight:600;display:flex;gap:10px;flex-wrap:wrap}
+.pp-title{font-family:var(--display);font-size:22px;font-weight:700;line-height:1.2;margin-top:4px}
+.pp-unit{font-size:12.5px;opacity:.9;margin-top:4px}
+.pp-flag{display:inline-block;background:#fff;color:var(--special);font-weight:700;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;border-radius:4px;padding:2px 6px;margin-top:8px}
+.pp-eq{margin:14px 18px 0;padding:10px 14px;border:1.5px solid var(--t-border);border-radius:10px;background:var(--t-wash)}
+.pp-eq b{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--t-ink)}
+.pp-eq span{font-weight:600;font-size:14px}
+.pp-body{padding:12px 18px 18px;display:flex;flex-direction:column;gap:0}
+.pp-sec{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--t-ink);padding:14px 0 6px;border-bottom:2px solid var(--t-border)}
+.pp-row{display:grid;grid-template-columns:150px 1fr;border-bottom:1px solid var(--line)}
+.pp-row > div:first-child{background:var(--t-wash);padding:8px 10px;font-weight:700;font-size:11.5px;color:var(--t-ink)}
+.pp-row > div:last-child{padding:8px 12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.pp-row ul{margin:0;padding-left:18px;white-space:normal}
+.pp-row.empty > div:last-child{color:var(--muted);font-style:italic}
+.kg{color:var(--kagan);font-weight:700;font-style:italic;display:block;margin-top:3px}
+.pp-foot{padding:10px 18px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);text-align:center}
+
+.empty-state{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:40px 24px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.empty-state p{color:var(--ink-2);max-width:48ch;margin:0}
+.spin{width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}*{transition:none!important}}
+
+@media (max-width:1100px){
+  .view-toggle{display:inline-flex}
+  .work{grid-template-columns:minmax(0,1fr)}
+  .work[data-view="edit"] .preview-wrap{display:none}
+  .work[data-view="preview"] .editor{display:none}
+  .preview-wrap{position:static;max-height:none;overflow:visible}
+}
+@media (max-width:820px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .side{position:static}
+  .plan-list{flex-direction:row;overflow-x:auto;padding-bottom:4px}
+  .plan-list li{flex:none;width:210px}
+  .row2{grid-template-columns:1fr}
+  .pp-row{grid-template-columns:1fr}
+  .pp-row > div:first-child{padding:6px 10px}
+  .plan-head input.title-input{font-size:22px}
+}
+</style>
+</head>
+<body>
+
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2.5" fill="none"/><path d="M3 9h18M8 2.5v3M16 2.5v3M7.5 13.5h3M7.5 17h6"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">Eggly Lesson Planner</div>
+        <div class="brand-sub">Legacy Traditional School · Gradual release: I Do → We Do → You Do</div>
+      </div>
+    </div>
+    <div class="status" id="status" data-s="idle" role="status" aria-live="polite">Loading your plans…</div>
+  </header>
+
+  <div class="layout">
+    <aside class="side">
+      <button class="btn primary" id="newPlan" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        New plan
+      </button>
+      <div class="side-label">Plans</div>
+      <ul class="plan-list" id="planList"></ul>
+    </aside>
+    <main id="main"></main>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- constants (mirrors the lesson-planner skill) ---------- */
+const THEMES = {
+  math:           {name:"Math",           dark:"2E5395", mid:"3B6BC7", light:"E7ECF5", border:"AEC6E8", std:"NVACS/CCSS"},
+  ela:            {name:"ELA / Reading",  dark:"00796B", mid:"00A896", light:"E0F2F1", border:"B2DFDB", std:"CCSS-aligned ELA"},
+  science:        {name:"Science",        dark:"1B5E20", mid:"2E7D32", light:"E8F5E9", border:"A5D6A7", std:"NVACS (NGSS)"},
+  social_studies: {name:"Social Studies", dark:"0D47A1", mid:"1565C0", light:"E3F2FD", border:"90CAF9", std:"NVACS Social Studies"}
+};
+const FIELDS = [
+  {k:"unit", label:"Unit / Subject", xl:"Unit / Subject", h:"med"},
+  {k:"eq", label:"Essential Question", xl:"Essential Question", opt:true, h:"small"},
+  {sec:"Planning", xl:"I. PLANNING"},
+  {k:"standards", label:"Nevada Academic Content Standards", xl:"Nevada Academic Content Standards", h:"med"},
+  {k:"objective", label:"Lesson Objective", xl:"Lesson Objective", opt:true, h:"small"},
+  {k:"targets", label:"I Can Statements", xl:"I Can Statements (Learning Targets)", hint:"One per line", bullets:true, h:"med"},
+  {k:"skills", label:"Skill(s) Focus", xl:"Skill(s) Focus", h:"small"},
+  {k:"academic_lang", label:"Academic Language", xl:"Academic Language", opt:true, h:"small"},
+  {k:"vocab", label:"Key Vocabulary", xl:"Key Vocabulary", hint:"Separate with commas", h:"small"},
+  {k:"materials", label:"Materials, Equipment & Technology", xl:"Instructional Materials, Equipment, and Technology", h:"small"},
+  {k:"spelling", label:"Spelling List", xl:"Spelling List", opt:true, h:"med"},
+  {k:"thinking_maps", label:"Thinking Maps", xl:"Thinking Maps", opt:true, h:"med"},
+  {k:"scaffolding", label:"Scaffolding & ELL Supports", xl:"Scaffolding & ELL Supports", h:"med"},
+  {sec:"Gradual Release", xl:"II. INSTRUCTION - GRADUAL RELEASE MODEL (I Do → We Do → You Do)"},
+  {k:"anticipatory", label:"Anticipatory Set (Whole Group)", xl:"Anticipatory Set Activity (Whole Group)", h:"big"},
+  {k:"i_do", label:"I Do", xl:"I Do", h:"big"},
+  {k:"we_do", label:"We Do", xl:"We Do  (Kagan strategy in red)", kagan:true, h:"big"},
+  {k:"you_do", label:"You Do", xl:"You Do  (Kagan strategy in red)", kagan:true, h:"big"},
+  {k:"independent_practice", label:"Independent Practice Problems", xl:"Independent Practice Problems", opt:true, h:"med"},
+  {k:"additional_practice", label:"Additional Practice Problems", xl:"Additional Practice Problems", opt:true, h:"med"},
+  {k:"wrap_up", label:"Wrap Up / Closure", xl:"Wrap Up / Closure", h:"big"}
+];
+const DAY_KEYS = FIELDS.filter(f=>f.k).map(f=>f.k);
+const HEIGHTS = {header:26, big:160, med:100, small:55};
+const EXCELJS = "https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";
+const JSPDF = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+
+/* ---------- state ---------- */
+const S = {
+  plans: new Map(), cur: null, day: 0, view: "edit",
+  db: null, downloads: null, sample: null, mode: "loading",
+  dirty: new Set(), save: {}, confirm: null, busy: null, msg: null
+};
+const $ = s => document.querySelector(s);
+const main = $("#main");
+
+/* ---------- helpers ---------- */
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => "p" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const clone = o => JSON.parse(JSON.stringify(o));
+function isoOf(d){ const z = n => String(n).padStart(2,"0"); return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate()); }
+function dOf(iso){ return new Date(iso + "T12:00:00"); }
+function fmtLong(iso){ return iso ? dOf(iso).toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"}) : ""; }
+function nextWeekday(iso){ const d = dOf(iso); do { d.setDate(d.getDate()+1); } while (d.getDay()===0 || d.getDay()===6); return isoOf(d); }
+function upcomingMonday(){ const d = new Date(); d.setHours(12); const add = (8 - d.getDay()) % 7 || 7; if (d.getDay()===1) return isoOf(d); d.setDate(d.getDate()+add); return isoOf(d); }
+function shiftISO(iso, days){ const d = dOf(iso); d.setDate(d.getDate()+days); return isoOf(d); }
+function cur(){ return S.plans.get(S.cur) || null; }
+function curDay(){ const p = cur(); return p ? p.days[Math.min(S.day, p.days.length-1)] : null; }
+function sortedPlans(){ return [...S.plans.entries()].sort((a,b)=>(b[1].updatedAt||0)-(a[1].updatedAt||0)); }
+function blankDay(iso, unit){ const d = {iso, date: fmtLong(iso), lesson_tag:"", special:false}; DAY_KEYS.forEach(k=>d[k]=""); if (unit) d.unit = unit; return d; }
+function newPlanObj(){
+  const iso = upcomingMonday();
+  return {title:"Week of " + dOf(iso).toLocaleDateString("en-US",{month:"short",day:"numeric"}), theme:"math",
+    school:"Legacy Traditional School", teacher:"Eggly", footer:"",
+    days:[blankDay(iso)], createdAt:Date.now(), updatedAt:Date.now()};
+}
+function normalize(p){
+  p = clone(p);
+  p.theme = THEMES[p.theme] ? p.theme : "math";
+  p.school ??= "Legacy Traditional School"; p.teacher ??= "Eggly"; p.footer ??= "";
+  p.days = Array.isArray(p.days) && p.days.length ? p.days : [blankDay(upcomingMonday())];
+  p.days.forEach(d => { DAY_KEYS.forEach(k => { if (typeof d[k] !== "string") d[k] = d[k] == null ? "" : String(d[k]); }); d.lesson_tag ??= ""; d.special = !!d.special; if (!d.date && d.iso) d.date = fmtLong(d.iso); });
+  return p;
+}
+function footerFor(p){ return p.footer || [p.school, "Teacher: " + p.teacher, p.days[0]?.unit?.split(",")[0] || THEMES[p.theme].name].filter(Boolean).join("   |   "); }
+function applyTheme(){
+  const t = THEMES[cur()?.theme || "math"], r = document.documentElement.style;
+  r.setProperty("--t-dark","#"+t.dark); r.setProperty("--t-mid","#"+t.mid);
+  r.setProperty("--t-light","#"+t.light); r.setProperty("--t-border","#"+t.border);
+}
+function setStatus(s, text){ const el = $("#status"); el.dataset.s = s; el.textContent = text; }
+function grow(el){ if (CSS.supports && CSS.supports("field-sizing","content")) return; el.style.height = "auto"; el.style.height = (el.scrollHeight + 2) + "px"; }
+
+/* ---------- persistence ---------- */
+const LS_KEY = "eggly-planner-v1";
+function lsWrite(){ try { const o = {}; S.plans.forEach((v,k)=>o[k]=v); localStorage.setItem(LS_KEY, JSON.stringify(o)); return true; } catch(e){ return false; } }
+function lsRead(){ try { const o = JSON.parse(localStorage.getItem(LS_KEY) || "{}"); Object.entries(o).forEach(([k,v])=>S.plans.set(k, normalize(v))); } catch(e){} }
+
+function touch(id){ const p = S.plans.get(id); if (p) p.updatedAt = Date.now(); scheduleSave(id); }
+function scheduleSave(id){
+  S.dirty.add(id);
+  const st = S.save[id] ||= {timer:null, saving:false, again:false};
+  clearTimeout(st.timer);
+  setStatus("saving","Saving…");
+  st.timer = setTimeout(()=>flush(id), 700);
+}
+async function flush(id){
+  const st = S.save[id];
+  if (st.saving){ st.again = true; return; }
+  const p = S.plans.get(id);
+  if (!p){ S.dirty.delete(id); return; }
+  st.saving = true;
+  let ok = true;
+  if (S.mode === "db"){
+    try { await S.db.doc("plans/" + id).set(clone(p)); }
+    catch(e){
+      ok = false;
+      if (e && e.code === "unavailable"){ await new Promise(r=>setTimeout(r, 800 + Math.random()*800)); try { await S.db.doc("plans/"+id).set(clone(p)); ok = true; } catch(e2){} }
+      if (!ok) setStatus("error", e && e.code === "quota_exceeded" ? "Plan storage is full. Delete an old plan." : "Couldn't save. Check your connection; edits stay on screen.");
+    }
+  } else { ok = lsWrite(); if (!ok) setStatus("error","Couldn't save in this browser."); }
+  st.saving = false;
+  if (st.again){ st.again = false; return flush(id); }
+  if (ok){ S.dirty.delete(id); if (!S.dirty.size) setStatus(S.mode==="db"?"saved":"local", S.mode==="db"?"All changes saved":"Saved in this browser"); }
+}
+async function removePlan(id){
+  S.plans.delete(id); S.dirty.delete(id);
+  if (S.mode === "db"){ try { await S.db.doc("plans/"+id).delete(); } catch(e){ setStatus("error","Couldn't delete that plan. Try again."); } }
+  else lsWrite();
+}
+
+/* ---------- rendering ---------- */
+function renderList(){
+  const ul = $("#planList");
+  const items = sortedPlans();
+  if (!items.length){ ul.innerHTML = `<li style="color:var(--muted);font-size:13px;padding:4px 2px">No plans yet.</li>`; return; }
+  ul.innerHTML = items.map(([id,p])=>{
+    const t = THEMES[p.theme] || THEMES.math;
+    const first = p.days[0], last = p.days[p.days.length-1];
+    const range = first?.iso ? dOf(first.iso).toLocaleDateString("en-US",{month:"short",day:"numeric"}) + (p.days.length>1 && last.iso ? " – " + dOf(last.iso).toLocaleDateString("en-US",{month:"short",day:"numeric"}) : "") : "";
+    return `<li><button type="button" data-plan="${esc(id)}" aria-current="${id===S.cur}"><span class="dot" style="background:#${t.dark}"></span><span class="pt">${esc(p.title || "Untitled plan")}</span><span class="pm">${esc(t.name)} · ${p.days.length} day${p.days.length===1?"":"s"}${range?" · "+esc(range):""}</span></button></li>`;
+  }).join("");
+}
+
+function renderMain(){
+  applyTheme();
+  renderList();
+  const p = cur();
+  if (S.mode === "loading"){ main.innerHTML = `<div class="empty-state"><span class="spin" aria-hidden="true"></span><p>Loading your plans…</p></div>`; return; }
+  if (!p){
+    main.innerHTML = `<div class="empty-state"><h2 style="font-size:22px">Start your first plan</h2><p>Each plan is a run of school days. Fill in I Do, We Do and You Do for each day, then download the Excel workbook or the printable PDF.</p><div class="actions" style="justify-content:center"><button class="btn primary" type="button" data-act="new">New plan</button>${S.mode==="local"?`<button class="btn" type="button" data-act="sample">Try a sample plan</button>`:""}</div></div>`;
+    return;
+  }
+  const dl = !!S.downloads;
+  main.innerHTML = `
+  <section class="plan-head">
+    <div class="ph-row">
+      <input id="p-title" class="title-input" type="text" data-pf="title" value="${esc(p.title)}" aria-label="Plan name" placeholder="Plan name">
+      <div class="subjects" role="radiogroup" aria-label="Subject">
+        ${Object.entries(THEMES).map(([k,t])=>`<button type="button" class="subj" role="radio" aria-checked="${p.theme===k}" data-theme-pick="${k}"><i style="background:#${t.dark}"></i>${esc(t.name)}</button>`).join("")}
+      </div>
+    </div>
+    <div class="ph-row">
+      <details class="details" id="p-details"${S.detailsOpen?" open":""}>
+        <summary>School, teacher and print footer</summary>
+        <div class="meta-grid">
+          <div class="field"><label for="p-school">School</label><input id="p-school" type="text" data-pf="school" value="${esc(p.school)}"></div>
+          <div class="field"><label for="p-teacher">Teacher</label><input id="p-teacher" type="text" data-pf="teacher" value="${esc(p.teacher)}"></div>
+          <div class="field" style="grid-column:1/-1"><label for="p-footer">PDF footer <span class="opt">Leave blank to build it from the school, teacher and unit</span></label><input id="p-footer" type="text" data-pf="footer" value="${esc(p.footer)}" placeholder="${esc(footerFor({...p, footer:""}))}"></div>
+        </div>
+      </details>
+      <div class="actions">
+        ${dl ? `<button class="btn" type="button" data-act="xlsx" ${S.busy?"disabled":""}>${S.busy==="xlsx"?'<span class="spin"></span>':icon("sheet")} Excel</button>
+        <button class="btn" type="button" data-act="pdf" ${S.busy?"disabled":""}>${S.busy==="pdf"?'<span class="spin"></span>':icon("pdf")} Printable PDF</button>` : ``}
+        <button class="btn ghost" type="button" data-act="nextweek" title="Make a copy with every date moved forward one week">${icon("copy")} Copy to next week</button>
+        ${S.confirm==="plan" ? `<span class="confirm">Delete this whole plan?<button class="btn danger-solid" type="button" data-act="delplan-yes">Delete plan</button><button class="btn ghost" type="button" data-act="cancel">Keep it</button></span>`
+          : `<button class="btn ghost danger" type="button" data-act="delplan">Delete plan</button>`}
+      </div>
+    </div>
+    ${!dl && S.mode!=="loading" ? `<div class="note">Downloads aren't available in this view, so the Excel and PDF buttons are hidden.</div>` : ""}
+    ${S.msg ? `<div class="note${S.msg.err?" err":""}">${esc(S.msg.text)}</div>` : ""}
+  </section>
+  <div class="tabs-row">
+    <div class="tabs" id="tabs" role="tablist" aria-label="School days"></div>
+    <button class="btn add-day" type="button" data-act="addday">${icon("plus")} Add day</button>
+    <div class="view-toggle" role="group" aria-label="Show">
+      <button type="button" data-view="edit" aria-pressed="${S.view==="edit"}">Edit</button>
+      <button type="button" data-view="preview" aria-pressed="${S.view==="preview"}">Preview</button>
+    </div>
+  </div>
+  <section class="work" id="work" data-view="${S.view}">
+    <div class="editor" id="editor"></div>
+    <div class="preview-wrap"><div class="paper" id="preview"></div></div>
+  </section>`;
+  renderTabs(); renderEditor(); renderPreview();
+}
+
+function icon(n){
+  const a = 'width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+  return {
+    sheet:`<svg ${a}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>`,
+    pdf:`<svg ${a}><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 14h8M8 17.5h5"/></svg>`,
+    copy:`<svg ${a}><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>`,
+    plus:`<svg ${a}><path d="M12 5v14M5 12h14"/></svg>`,
+    spark:`<svg ${a}><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></svg>`
+  }[n];
+}
+
+function renderTabs(){
+  const p = cur(), el = $("#tabs"); if (!p || !el) return;
+  el.innerHTML = p.days.map((d,i)=>{
+    const dt = d.iso ? dOf(d.iso) : null;
+    return `<button type="button" class="tab${d.special?" special":""}" role="tab" aria-selected="${i===S.day}" data-day="${i}">
+      <span class="tw">${dt ? dt.toLocaleDateString("en-US",{weekday:"short"}) : "Day " + (i+1)}</span>
+      <span class="td">${dt ? (dt.getMonth()+1)+"/"+dt.getDate() : "—"}</span>
+      <span class="tl">${esc(d.lesson_tag || "No lesson yet")}</span></button>`;
+  }).join("");
+}
+
+function renderEditor(){
+  const p = cur(), d = curDay(), el = $("#editor"); if (!p || !d || !el) return;
+  const confirmDay = S.confirm === "day";
+  const drafting = S.busy === "draft";
+  let h = `
+  <div class="day-bar">
+    <div class="grp">
+      ${S.sample ? `<button class="btn claude" type="button" data-act="draft" ${S.busy?"disabled":""} title="Claude fills in the empty fields for this day">${drafting?'<span class="spin"></span> Drafting…':icon("spark")+" Draft empty fields with Claude"}</button>` : ""}
+      <button class="btn ghost" type="button" data-act="dupday">${icon("copy")} Duplicate day</button>
+    </div>
+    <div class="grp">
+      ${confirmDay ? `<span class="confirm">Delete this day?<button class="btn danger-solid" type="button" data-act="delday-yes">Delete</button><button class="btn ghost" type="button" data-act="cancel">Keep</button></span>`
+        : `<button class="btn ghost danger" type="button" data-act="delday" ${p.days.length<2?"disabled title='A plan needs at least one day'":""}>Delete day</button>`}
+    </div>
+  </div>
+  <div class="row2">
+    <div class="field"><label for="d-iso">Date</label><input id="d-iso" type="date" data-df="iso" value="${esc(d.iso||"")}"></div>
+    <div class="field"><label for="d-lesson_tag">Lesson <span class="hint">Shows as the day's title</span></label><input id="d-lesson_tag" type="text" data-df="lesson_tag" value="${esc(d.lesson_tag)}" placeholder="Lesson 2-4: Add Decimals"></div>
+  </div>
+  <label class="check${d.special?" on":""}" style="align-self:flex-start"><input id="d-special" type="checkbox" data-df="special" ${d.special?"checked":""}> Assessment or special day <span class="opt" style="font-weight:500;color:var(--muted)">(orange in both files)</span></label>`;
+  FIELDS.forEach(f=>{
+    if (f.sec){ h += `<div class="sec-head"><h3>${esc(f.sec)}</h3></div>`; return; }
+    const hint = f.kagan ? `<span class="hint">Start a line with <code>Kagan:</code> to highlight the strategy</span>` : f.hint ? `<span class="hint">${esc(f.hint)}</span>` : "";
+    h += `<div class="field"><label for="f-${f.k}">${esc(f.label)}${f.opt?' <span class="opt">optional</span>':""}${hint}</label><textarea id="f-${f.k}" data-df="${f.k}" rows="${f.h==="big"?4:f.h==="med"?3:1}">${esc(d[f.k])}</textarea></div>`;
+  });
+  el.innerHTML = h;
+  el.querySelectorAll("textarea").forEach(grow);
+}
+
+function linesHTML(text, f){
+  const lines = String(text).split("\n");
+  if (f && f.bullets) return "<ul>" + lines.filter(l=>l.trim()).map(l=>`<li>${esc(l.replace(/^[-•*]\s*/,""))}</li>`).join("") + "</ul>";
+  return lines.map(l => /^\s*Kagan:/.test(l) ? `<span class="kg">${esc(l.trim().replace(/^Kagan:/,"Kagan Strategy:"))}</span>` : esc(l)).join("\n").replace(/<\/span>\n/g,"</span>");
+}
+function renderPreview(){
+  const p = cur(), d = curDay(), el = $("#preview"); if (!p || !d || !el) return;
+  let rows = `<div class="pp-row"><div>School</div><div>${esc(p.school)}</div></div><div class="pp-row"><div>Teacher</div><div>${esc(p.teacher)}</div></div>`;
+  FIELDS.forEach(f=>{
+    if (f.k === "unit" || f.k === "eq") return;
+    if (f.sec){ rows += `<div class="pp-sec">${f.sec === "Gradual Release" ? "Gradual Release · I Do → We Do → You Do" : esc(f.sec)}</div>`; return; }
+    const v = d[f.k];
+    if (!v.trim()){ if (!f.opt) rows += `<div class="pp-row empty"><div>${esc(f.label)}</div><div>Not filled in yet</div></div>`; return; }
+    rows += `<div class="pp-row"><div>${esc(f.label)}</div><div>${linesHTML(v, f)}</div></div>`;
+  });
+  el.innerHTML = `
+    <div class="pp-head${d.special?" special":""}">
+      <div class="pp-kicker"><span>${esc(d.date || "No date")}</span><span>${esc(THEMES[p.theme].name)}</span></div>
+      <div class="pp-title">${esc(d.lesson_tag || "Untitled lesson")}</div>
+      ${d.unit.trim() ? `<div class="pp-unit">${esc(d.unit)}</div>` : ""}
+      ${d.special ? `<span class="pp-flag">Assessment / special day</span>` : ""}
+    </div>
+    ${d.eq.trim() ? `<div class="pp-eq"><b>Essential Question</b><span>${esc(d.eq)}</span></div>` : ""}
+    <div class="pp-body">${rows}</div>
+    <div class="pp-foot">${esc(footerFor(p))}</div>`;
+}
+
+/* ---------- events ---------- */
+$("#newPlan").addEventListener("click", createPlan);
+$("#planList").addEventListener("click", e=>{
+  const b = e.target.closest("[data-plan]"); if (!b) return;
+  S.cur = b.dataset.plan; S.day = 0; S.confirm = null; S.msg = null; renderMain();
+});
+function createPlan(){
+  const id = uid(); S.plans.set(id, newPlanObj()); S.cur = id; S.day = 0; S.confirm = null; S.msg = null;
+  scheduleSave(id); renderMain(); const t = $("#p-title"); if (t){ t.focus(); t.select(); }
+}
+main.addEventListener("input", e=>{
+  const t = e.target, p = cur(); if (!p) return;
+  if (t.dataset.pf){ p[t.dataset.pf] = t.value; touch(S.cur); renderPreview(); if (t.dataset.pf==="title") renderList(); return; }
+  const k = t.dataset.df; if (!k || k === "iso" || k === "special") return;
+  const d = curDay(); d[k] = t.value; touch(S.cur);
+  if (t.tagName === "TEXTAREA") grow(t);
+  renderPreview(); if (k === "lesson_tag") renderTabs();
+});
+main.addEventListener("change", e=>{
+  const t = e.target, p = cur(), d = curDay(); if (!p || !d) return;
+  if (t.dataset.df === "iso"){ d.iso = t.value; d.date = fmtLong(t.value); touch(S.cur); renderTabs(); renderPreview(); renderList(); }
+  if (t.dataset.df === "special"){ d.special = t.checked; t.closest(".check").classList.toggle("on", t.checked); touch(S.cur); renderTabs(); renderPreview(); }
+});
+main.addEventListener("toggle", e=>{ if (e.target.id === "p-details") S.detailsOpen = e.target.open; }, true);
+main.addEventListener("click", e=>{
+  const p = cur();
+  const tp = e.target.closest("[data-theme-pick]");
+  if (tp && p){ p.theme = tp.dataset.themePick; touch(S.cur); applyTheme(); main.querySelectorAll("[data-theme-pick]").forEach(b=>b.setAttribute("aria-checked", b===tp)); renderList(); renderPreview(); return; }
+  const tab = e.target.closest("[data-day]");
+  if (tab){ S.day = +tab.dataset.day; S.confirm = null; renderTabs(); renderEditor(); renderPreview(); return; }
+  const v = e.target.closest("[data-view]");
+  if (v && v.tagName === "BUTTON"){ S.view = v.dataset.view; $("#work").dataset.view = S.view; main.querySelectorAll(".view-toggle button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.view===S.view)); if (S.view==="edit") main.querySelectorAll("#editor textarea").forEach(grow); return; }
+  const a = e.target.closest("[data-act]"); if (!a) return;
+  const act = a.dataset.act;
+  if (act === "new") return createPlan();
+  if (act === "sample") return loadSample();
+  if (!p) return;
+  if (act === "addday"){
+    const last = p.days[p.days.length-1];
+    p.days.push(blankDay(last?.iso ? nextWeekday(last.iso) : upcomingMonday(), last?.unit || ""));
+    S.day = p.days.length-1; touch(S.cur); renderMain(); return;
+  }
+  if (act === "dupday"){
+    const d = clone(curDay()); d.iso = nextWeekday(p.days[p.days.length-1].iso || upcomingMonday()); d.date = fmtLong(d.iso);
+    p.days.push(d); S.day = p.days.length-1; touch(S.cur); renderMain(); return;
+  }
+  if (act === "delday"){ S.confirm = "day"; renderEditor(); return; }
+  if (act === "delday-yes"){ p.days.splice(S.day,1); S.day = Math.max(0, S.day-1); S.confirm = null; touch(S.cur); renderMain(); return; }
+  if (act === "delplan"){ S.confirm = "plan"; renderMain(); return; }
+  if (act === "delplan-yes"){ const id = S.cur; S.confirm = null; removePlan(id); S.cur = sortedPlans()[0]?.[0] || null; S.day = 0; renderMain(); return; }
+  if (act === "cancel"){ S.confirm = null; renderMain(); return; }
+  if (act === "nextweek"){
+    const c = clone(p); c.days.forEach(d=>{ if (d.iso){ d.iso = shiftISO(d.iso, 7); d.date = fmtLong(d.iso); } });
+    c.title = (p.title || "Plan") + " (next week)"; c.createdAt = c.updatedAt = Date.now();
+    const id = uid(); S.plans.set(id, c); S.cur = id; S.day = 0; scheduleSave(id);
+    S.msg = {text:"Copied with every date moved forward one week. Rename it and update the lessons."}; renderMain(); return;
+  }
+  if (act === "xlsx") return runExport("xlsx");
+  if (act === "pdf") return runExport("pdf");
+  if (act === "draft") return draftDay();
+});
+
+/* ---------- script loader ---------- */
+const loaded = {};
+function loadScript(src){
+  return loaded[src] ||= new Promise((res, rej)=>{ const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = ()=>{ delete loaded[src]; rej(new Error("load")); }; document.head.appendChild(s); });
+}
+function fileBase(p){ return (p.title || "Lesson_Plan").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"_").slice(0,80) || "Lesson_Plan"; }
+
+async function runExport(kind){
+  const p = cur(); if (!p || S.busy) return;
+  S.busy = kind; S.msg = null; renderMain();
+  try {
+    let blob, name;
+    if (kind === "xlsx"){ await loadScript(EXCELJS); blob = await buildXlsx(p); name = fileBase(p) + ".xlsx"; }
+    else { await loadScript(JSPDF); blob = buildPdf(p); name = fileBase(p) + "_Printable.pdf"; }
+    const r = await S.downloads.save({filename:name, data:blob});
+    S.msg = r.status === "saved" ? {text:"Downloaded " + name + "."} : null;
+  } catch(e){
+    const c = e && e.code;
+    if (c === "declined") S.msg = null;
+    else if (c === "rate_limited") S.msg = {text:"A download prompt is already open. Finish that one first.", err:true};
+    else if (e && e.message === "load") S.msg = {text:"Couldn't load the file builder. Check your connection and try again.", err:true};
+    else S.msg = {text:"That download didn't work (" + (c || (e && e.message) || "unknown error") + ").", err:true};
+  }
+  S.busy = null; renderMain();
+}
+
+/* ---------- Excel (day-per-column, like build_xlsx.py) ---------- */
+async function buildXlsx(p){
+  const t = THEMES[p.theme], argb = h => "FF" + h;
+  const wb = new ExcelJS.Workbook(); wb.creator = p.teacher;
+  const ws = wb.addWorksheet((p.title || "Lesson Plan").replace(/[\\\/\?\*\[\]:]/g,"").slice(0,31) || "Lesson Plan", {
+    views:[{showGridLines:false, state:"frozen", xSplit:1, ySplit:1}],
+    pageSetup:{orientation:"landscape", paperSize:1, fitToPage:false, margins:{left:.4,right:.4,top:.5,bottom:.5,header:.2,footer:.2}}
+  });
+  ws.pageSetup.printTitlesRow = "1:1"; ws.pageSetup.printTitlesColumn = "A:A";
+  ws.getColumn(1).width = 30;
+  p.days.forEach((_,i)=> ws.getColumn(i+2).width = 62);
+  const border = {style:"thin", color:{argb:argb(t.border)}};
+  const borders = {top:border,left:border,bottom:border,right:border};
+  const labelFill = {type:"pattern", pattern:"solid", fgColor:{argb:argb(t.light)}};
+  const headFill = {type:"pattern", pattern:"solid", fgColor:{argb:argb(t.dark)}};
+  const specHead = {type:"pattern", pattern:"solid", fgColor:{argb:"FFE65100"}};
+  const specFill = {type:"pattern", pattern:"solid", fgColor:{argb:"FFFFF3E0"}};
+  const secFill = {type:"pattern", pattern:"solid", fgColor:{argb:argb(t.border)}};
+  const wrap = {wrapText:true, vertical:"top"};
+
+  const hdr = ws.getRow(1); hdr.height = 36;
+  const c0 = hdr.getCell(1); c0.value = "Section"; c0.fill = headFill; c0.font = {bold:true, color:{argb:"FFFFFFFF"}}; c0.alignment = {vertical:"middle"}; c0.border = borders;
+  p.days.forEach((d,i)=>{ const c = hdr.getCell(i+2); c.value = (d.date || "") + (d.lesson_tag ? "\n" + d.lesson_tag : ""); c.fill = d.special ? specHead : headFill; c.font = {bold:true, color:{argb:"FFFFFFFF"}}; c.alignment = {wrapText:true, vertical:"middle"}; c.border = borders; });
+
+  const any = k => p.days.some(d => (d[k]||"").trim());
+  const rows = [
+    {label:"School", h:"small", val:()=>p.school},
+    {label:"Date", h:"small", val:d=>d.date},
+    {label:"Teacher", h:"small", val:()=>p.teacher}
+  ];
+  FIELDS.forEach(f=>{
+    if (f.sec) rows.push({sec:f.xl});
+    else if (!f.opt || any(f.k)) rows.push({label:f.xl, h:f.h, key:f.k, kagan:f.kagan, val:d=>d[f.k]});
+  });
+  let r = 2;
+  rows.forEach(row=>{
+    const R = ws.getRow(r);
+    if (row.sec){
+      R.height = HEIGHTS.header;
+      ws.mergeCells(r, 1, r, p.days.length + 1);
+      const c = R.getCell(1); c.value = row.sec; c.fill = secFill; c.font = {bold:true, color:{argb:argb(t.dark)}}; c.alignment = {vertical:"middle"}; c.border = borders;
+    } else {
+      R.height = HEIGHTS[row.h] || 55;
+      const l = R.getCell(1); l.value = row.label; l.fill = labelFill; l.font = {bold:true, color:{argb:argb(t.dark)}}; l.alignment = wrap; l.border = borders;
+      p.days.forEach((d,i)=>{
+        const c = R.getCell(i+2), v = String(row.val(d) || "");
+        if (row.kagan && /(^|\n)\s*Kagan:/.test(v)){
+          const parts = v.split("\n");
+          c.value = {richText: parts.map((ln, j)=>({text: ln + (j < parts.length-1 ? "\n" : ""), font: /^\s*Kagan:/.test(ln) ? {bold:true, color:{argb:"FFC00000"}, size:11} : {size:11}}))};
+        } else c.value = v;
+        c.alignment = wrap; c.border = borders;
+        if (d.special) c.fill = specFill;
+      });
+    }
+    r++;
+  });
+  const buf = await wb.xlsx.writeBuffer();
+  return new Blob([buf], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+}
+
+/* ---------- PDF (one page-flow per day, like build_pdf.py) ---------- */
+function pdfText(s){ return String(s||"").replace(/→/g,"->").replace(/←/g,"<-").replace(/[≤]/g,"<=").replace(/[≥]/g,">=").replace(/[≈]/g,"~").replace(/[^\x00-\xFF–—‘’“”•…]/g,""); }
+function hexRGB(h){ return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; }
+function buildPdf(p){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:"pt", format:"letter"});
+  const t = THEMES[p.theme], W = 612, H = 792, M = 42, CW = W - M*2;
+  const DARK = hexRGB(t.dark), MID = hexRGB(t.mid), LIGHT = hexRGB(t.light), ACC = hexRGB(t.border), ORANGE = [230,81,0];
+  let y = 0;
+  const ensure = (need, d) => { if (y + need > H - 54){ doc.addPage(); y = M; contHead(d); } };
+  function contHead(d){
+    doc.setFillColor(...(d.special ? ORANGE : DARK)); doc.rect(M, y, CW, 20, "F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(255,255,255);
+    doc.text(pdfText((d.date||"") + (d.lesson_tag ? "  |  " + d.lesson_tag : "") + "  (continued)"), M + 8, y + 13.5);
+    y += 30;
+  }
+  function section(title, d){
+    ensure(34, d);
+    doc.setFont("helvetica","bold"); doc.setFontSize(9.5); doc.setTextColor(...DARK);
+    doc.text(pdfText(title.toUpperCase()), M, y + 12);
+    doc.setDrawColor(...ACC); doc.setLineWidth(1.5); doc.line(M, y + 17, M + CW, y + 17);
+    y += 26;
+  }
+  function block(label, text, d, bullets){
+    const pad = 8, bodyW = CW - pad*2;
+    const out = [];
+    String(text).split("\n").forEach(ln=>{
+      if (!ln.trim()){ out.push({t:"", k:false}); return; }
+      const kg = /^\s*Kagan:/.test(ln);
+      let s = kg ? ln.trim().replace(/^Kagan:/,"Kagan Strategy:") : (bullets ? "•  " + ln.replace(/^[-•*]\s*/,"") : ln);
+      doc.setFont("helvetica", kg ? "bolditalic" : "normal"); doc.setFontSize(9.5);
+      doc.splitTextToSize(pdfText(s), bodyW).forEach(w=>out.push({t:w, k:kg}));
+    });
+    const LH = 12.5;
+    ensure(20 + Math.min(out.length, 4) * LH, d);
+    // label strip
+    doc.setFillColor(...LIGHT); doc.rect(M, y, CW, 17, "F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(8.5); doc.setTextColor(...DARK);
+    doc.text(pdfText(label.toUpperCase()), M + pad, y + 11.5);
+    y += 17 + 6;
+    out.forEach(o=>{
+      if (y + LH > H - 54){ doc.addPage(); y = M; contHead(d); }
+      if (o.k){ doc.setFont("helvetica","bolditalic"); doc.setTextColor(...ORANGE); } else { doc.setFont("helvetica","normal"); doc.setTextColor(26,26,26); }
+      doc.setFontSize(9.5); doc.text(o.t, M + pad, y + 9);
+      y += LH;
+    });
+    y += 8;
+  }
+  p.days.forEach((d, i)=>{
+    if (i > 0) doc.addPage();
+    y = M;
+    const band = d.special ? ORANGE : DARK;
+    doc.setFillColor(...band); doc.rect(M, y, CW, 64, "F");
+    doc.setTextColor(255,255,255);
+    doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.text(pdfText((d.date || "") + "   |   " + t.name + (d.special ? "   |   ASSESSMENT / SPECIAL DAY" : "")), M + 12, y + 16);
+    doc.setFont("helvetica","bold"); doc.setFontSize(16);
+    const ttl = doc.splitTextToSize(pdfText(d.lesson_tag || "Lesson"), CW - 24)[0]; doc.text(ttl, M + 12, y + 36);
+    doc.setFont("helvetica","normal"); doc.setFontSize(8.8);
+    const un = doc.splitTextToSize(pdfText(d.unit || ""), CW - 24)[0] || ""; doc.text(un, M + 12, y + 53);
+    y += 74;
+    // meta line
+    doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(80,86,96);
+    doc.text(pdfText("School: " + p.school + "     Teacher: " + p.teacher), M, y + 8); y += 18;
+    if (d.eq.trim()){
+      doc.setFont("helvetica","bold"); doc.setFontSize(10.5);
+      const lines = doc.splitTextToSize(pdfText(d.eq), CW - 24);
+      const bh = 22 + lines.length * 13;
+      doc.setFillColor(...LIGHT); doc.setDrawColor(...MID); doc.setLineWidth(1); doc.rect(M, y, CW, bh, "FD");
+      doc.setFontSize(7.5); doc.setTextColor(...DARK); doc.text("ESSENTIAL QUESTION", M + 12, y + 13);
+      doc.setFontSize(10.5); doc.setTextColor(26,26,26); lines.forEach((l,j)=>doc.text(l, M + 12, y + 27 + j*13));
+      y += bh + 10;
+    }
+    FIELDS.forEach(f=>{
+      if (f.k === "unit" || f.k === "eq") return;
+      if (f.sec){ section(f.sec === "Gradual Release" ? "Gradual Release: I Do -> We Do -> You Do" : f.sec, d); return; }
+      if (!d[f.k].trim()) return;
+      block(f.label, d[f.k], d, f.bullets);
+    });
+  });
+  const n = doc.getNumberOfPages(), foot = pdfText(footerFor(p));
+  for (let i = 1; i <= n; i++){
+    doc.setPage(i); doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(130,130,130);
+    doc.text(foot, M, H - 26); doc.text("Page " + i + " of " + n, W - M, H - 26, {align:"right"});
+  }
+  return doc.output("blob");
+}
+
+/* ---------- Draft with Claude ---------- */
+async function draftDay(){
+  const p = cur(), d = curDay(); if (!p || !d || !S.sample || S.busy) return;
+  const t = THEMES[p.theme];
+  const empty = DAY_KEYS.filter(k => !d[k].trim() && !(FIELDS.find(f=>f.k===k).opt && !["eq","objective"].includes(k)));
+  if (!empty.length){ S.msg = {text:"Every main field for this day already has something in it."}; renderMain(); return; }
+  if (!d.lesson_tag.trim() && !d.unit.trim()){ S.msg = {text:"Add the lesson or the unit first so Claude knows what to plan.", err:true}; renderMain(); return; }
+  const have = {}; DAY_KEYS.forEach(k=>{ if (d[k].trim()) have[k] = d[k]; });
+  const prompt = `You are filling in one day of a 5th-grade gradual-release lesson plan for Teacher ${p.teacher} at ${p.school} (Las Vegas, Nevada).
+Subject: ${t.name}
+Lesson: ${d.lesson_tag || "(not given)"}
+Unit / curriculum: ${d.unit || "(not given)"}
+Date: ${d.date || "(not given)"}
+Assessment or special day: ${d.special ? "yes" : "no"}
+Fields already written (stay consistent with them, do not repeat them): ${JSON.stringify(have)}
+
+Write ONLY these fields: ${empty.join(", ")}.
+Rules:
+- Concrete and classroom-ready: actual numbers, actual sample problems, actual sentence frames. Never vague filler like "students will practice the skill".
+- anticipatory, i_do, we_do, you_do and wrap_up each start with a timing line, e.g. "I do - 12 min".
+- we_do and you_do each include one line that starts exactly with "Kagan: " naming a Kagan structure matched to the activity (Think-Pair-Share, Numbered Heads Together, Rally Coach, Round Robin, Quiz-Quiz-Trade, etc.). On an assessment/special day, we_do is a short Kagan warm-up review and you_do is independent scored work with no Kagan line.
+- targets: 2-3 lines, each starting "I can".
+- standards: cite as "${t.std}" with the real standard code and its wording.
+- vocab: comma-separated words.
+- independent_practice / additional_practice (if asked): numbered problems "1) ...".
+- Do not invent curriculum specifics you are unsure of (page numbers, spelling lists, leveled reader titles). Put "[verify]" right after anything uncertain.
+- Use \\n for line breaks inside a field.
+Return one JSON object whose keys are exactly the requested field names and whose values are strings.`;
+  S.busy = "draft"; S.msg = null; renderEditor(); renderMain();
+  const planId = S.cur, dayRef = d;
+  try {
+    const out = await S.sample.json(prompt, {modelTier:"default"});
+    let n = 0;
+    if (out && typeof out === "object"){
+      empty.forEach(k=>{ if (typeof out[k] === "string" && out[k].trim() && !dayRef[k].trim()){ dayRef[k] = out[k].trim(); n++; } });
+    }
+    if (n){ touch(planId); S.msg = {text:`Claude filled ${n} field${n===1?"":"s"}. Read it over and fix anything marked [verify].`}; }
+    else S.msg = {text:"Claude didn't return anything usable. Try again.", err:true};
+  } catch(e){
+    const c = e && e.code;
+    S.msg = c === "not_granted" ? {text:"Claude drafting wasn't allowed in this view.", err:true}
+      : c === "rate_limited" ? {text:"Too many drafts in a row. Wait a minute and try again.", err:true}
+      : {text:"Claude couldn't draft this day (" + (c || "error") + "). Try again.", err:true};
+    if (c === "not_granted") S.sample = null;
+  }
+  S.busy = null; renderMain();
+}
+
+/* ---------- standalone helpers (GitHub Pages) ---------- */
+async function loadSample(){
+  try {
+    const r = await fetch("sample.json"); if (!r.ok) throw 0;
+    const pl = normalize(await r.json()); pl.createdAt = pl.updatedAt = Date.now();
+    const id = uid(); S.plans.set(id, pl); S.cur = id; S.day = 0; scheduleSave(id); renderMain();
+  } catch(e){ S.msg = {text:"Couldn't load the sample plan.", err:true}; createPlan(); }
+}
+const browserDownloads = {
+  async save({filename, data}){
+    const url = URL.createObjectURL(data instanceof Blob ? data : new Blob([data]));
+    const a = document.createElement("a"); a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    return {status:"saved"};
+  }
+};
+
+/* ---------- boot ---------- */
+let unsub = null;
+function startDb(db){
+  S.db = db; S.mode = "db";
+  let first = true;
+  unsub = db.collection("plans").onSnapshot(snap=>{
+    const seen = new Set();
+    snap.docs.forEach(doc=>{
+      seen.add(doc.id);
+      if (S.dirty.has(doc.id)) return;
+      S.plans.set(doc.id, normalize(doc.data()));
+    });
+    [...S.plans.keys()].forEach(id=>{ if (!seen.has(id) && !S.dirty.has(id)) S.plans.delete(id); });
+    if (first){
+      first = false;
+      if (!S.cur || !S.plans.has(S.cur)) S.cur = sortedPlans()[0]?.[0] || null;
+      setStatus("saved","All changes saved");
+      renderMain(); return;
+    }
+    if (S.cur && !S.plans.has(S.cur)) { S.cur = sortedPlans()[0]?.[0] || null; S.day = 0; renderMain(); return; }
+    const ae = document.activeElement;
+    if (ae && main.contains(ae) && /INPUT|TEXTAREA/.test(ae.tagName)) renderList();
+    else renderMain();
+  }, err=>{
+    setStatus("error","Lost the connection to your saved plans. Reload to reconnect.");
+  });
+}
+function startLocal(){
+  S.mode = "local"; lsRead();
+  S.cur = sortedPlans()[0]?.[0] || null;
+  setStatus("local","Saved in this browser");
+  renderMain();
+}
+
+renderMain();
+if (window.claude && typeof window.claude.use === "function"){
+  Promise.all([
+    window.claude.use("db").catch(()=>null),
+    window.claude.use("downloads").catch(()=>null),
+    window.claude.use("sample").catch(()=>null)
+  ]).then(([db, dl, sm])=>{
+    S.downloads = dl; S.sample = sm;
+    if (db) startDb(db); else startLocal();
+  });
+} else {
+  S.downloads = browserDownloads;
+  startLocal();
+}
+})();
+</script>
+
+</body>
+</html>
