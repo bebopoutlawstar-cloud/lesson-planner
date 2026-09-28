@@ -1,37 +1,57 @@
-# 5th Grade Lesson Planner
+# Lesson Planner
 
-A gradual-release lesson planner for Legacy Traditional School, 5th grade. Plan a run of school days (I Do → We Do → You Do), see each day as a printable page as you type, and download the week as an Excel workbook or a printable PDF.
+Plan gradual-release lessons (I Do → We Do → You Do) for any grade, K–12, and grade student work against an answer key with Claude.
 
-## Features
+Live site: https://bebopoutlawstar-cloud.github.io/lesson-planner/
 
-- One plan per week, one tab per school day
-- Subject color themes: Math, ELA / Reading, Science, Social Studies
-- Fields: Essential Question, NVACS standards, I Can statements, vocabulary, materials, Scaffolding & ELL supports, Anticipatory Set, I Do, We Do, You Do, practice problems, Wrap Up
-- Start a line with `Kagan:` in We Do or You Do and it is highlighted (red in Excel, orange in the PDF)
-- Mark assessment or special days, which show in orange
-- **Excel** export: one column per day, landscape, header row and label column repeat when printed
-- **Printable PDF** export: one page flow per day
-- "Copy to next week" duplicates a plan with every date moved forward 7 days
-- Plans save automatically in your browser (localStorage), so there is no account or server
+## Plans
 
-## Run it
+- One plan per week, with a tab for each school day
+- Grade picker (K–12) and subject color themes: Math, ELA / Reading, Science, Social Studies
+- Fields: Essential Question, standards, I Can statements, vocabulary, materials, Scaffolding & ELL supports, Anticipatory Set, I Do, We Do, You Do, practice problems, Wrap Up
+- Start a line with `Kagan:` in We Do or You Do and it is highlighted
+- Assessment or special days show in orange
+- **Excel** export (one column per day) and **printable PDF** export (one page flow per day)
+- **Copy to next week** duplicates a plan and moves every date forward 7 days
+- **Draft empty fields with Claude** (needs an API key) fills in a day from its lesson and unit
 
-Open `index.html` in a browser, or visit the GitHub Pages site.
-The Excel and PDF builders (ExcelJS and jsPDF) load from cdnjs, so exports need an internet connection.
+## Grade work
 
-## Deploy to GitHub Pages
+1. Type the answer key, or upload photos or a PDF of it. Add point values like `(2 pts)`.
+2. Add photos or scans of student papers. Each file can be one student, or all the files can be one student's pages.
+3. Click **Grade**. The app marks every question, totals the score and writes short feedback.
+4. Check the results. Click any mark to change it, edit the feedback, and download a scores CSV.
 
-1. Push this folder to a GitHub repo.
-2. In the repo, go to **Settings → Pages**.
-3. Under **Build and deployment**, choose **Deploy from a branch**, pick `main` and `/ (root)`, then click **Save**.
-4. After a minute the site is live at `https://<your-username>.github.io/<repo-name>/`.
+Answers the app can't read are marked **Unclear** so you can check them yourself.
+
+### Two ways to grade (choose in Settings)
+
+- **Free text reader (default):** runs in your browser with [Tesseract.js](https://github.com/naptha/tesseract.js). No key, no cost, and photos never leave your computer. Best for typed worksheets or neat print with answers numbered like `1) 16.25`, one per line. It understands equivalent numbers (1/2 = 0.5), multiple-choice letters, and small spelling slips, but not messy handwriting, long written answers, or partial credit.
+- **Claude (optional):** reads handwriting, gives partial credit and writes feedback. Needs your own API key.
+
+## Claude API key (optional)
+
+Claude grading and drafting use your own key from Anthropic:
+
+1. Sign in at [console.anthropic.com](https://console.anthropic.com), add credit under Billing, and create a key under API Keys.
+2. In the app, open **Settings**, paste the key, click **Save key**, then **Test key**.
+
+The key is saved only in your browser and sent only to Anthropic's API. Anthropic bills your account for each paper graded. Don't save your key on a shared computer.
+
+## Privacy
+
+Plans, assignments and scores are saved in your browser (localStorage). There is no account or server. With the free reader, student photos stay on your computer. With Claude grading, photos are sent to Anthropic and are not stored by this site. Use first names or student numbers.
+
+## Run it or deploy it
+
+Open `index.html` in a browser. To host it, push the folder to GitHub and turn on **Settings → Pages → Deploy from a branch → main / (root)**.
 
 ## Files
 
 | File | What it is |
 | --- | --- |
 | `index.html` | The whole app: HTML, CSS and JavaScript |
-| `sample.json` | Sample plan used by the "Try a sample plan" button (enVision Math Grade 5, Lessons 2-4 and 2-5) |
+| `sample.json` | Sample plan for the "Try a sample plan" button |
 
 ## Credits
 

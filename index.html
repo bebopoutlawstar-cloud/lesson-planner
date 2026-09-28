@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Gradual-release lesson planner: I Do, We Do, You Do with Kagan strategies, exports to Excel and printable PDF.">
-<title>Eggly Lesson Planner</title>
+<title>Lesson Planner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,600;1,700&family=JetBrains+Mono:wght@500&display=swap">
@@ -40,6 +40,7 @@
   --paper:#1A2028; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);}
 button,input,textarea,select{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
@@ -88,6 +89,9 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
 .plan-head input.title-input{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.015em;border:0;background:none;padding:2px 0;min-width:0;flex:1 1 320px;border-bottom:2px solid transparent;border-radius:0}
 .plan-head input.title-input:hover{border-bottom-color:var(--line)}
 .plan-head input.title-input:focus{outline:none;border-bottom-color:var(--t-mid);box-shadow:none;background:none}
+.grade-pick{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink-2)}
+select{border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:6px 8px;font-size:14px}
+select:focus{outline:none;border-color:var(--t-mid);box-shadow:0 0 0 3px color-mix(in srgb,var(--t-mid) 22%,transparent)}
 .subjects{display:flex;gap:6px;flex-wrap:wrap}
 .subj{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px 6px 9px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
 .subj i{width:11px;height:11px;border-radius:50%;display:block}
@@ -166,6 +170,72 @@ input:focus,textarea:focus{outline:none;border-color:var(--t-mid);box-shadow:0 0
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}*{transition:none!important}}
 
+/* top nav */
+.topnav{display:flex;gap:2px;background:var(--surface-2);border-radius:11px;padding:3px;margin-left:auto}
+.topnav button{border:0;background:none;border-radius:8px;padding:7px 14px;font-weight:600;font-size:14px;cursor:pointer;color:var(--ink-2)}
+.topnav button[aria-current="page"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+
+/* grading */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.card + .card{margin-top:14px}
+.card h2{font-size:18px;display:flex;align-items:center;gap:10px}
+.step{font-family:var(--mono);font-size:12px;width:24px;height:24px;border-radius:50%;background:var(--t-dark);color:#fff;display:inline-grid;place-items:center;flex:none}
+.card-sub{color:var(--ink-2);font-size:13.5px;margin:-6px 0 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.drop{position:relative;border:1.5px dashed var(--line);border-radius:12px;padding:16px;text-align:center;color:var(--ink-2);font-size:14px;cursor:pointer;background:var(--bg);display:flex;flex-direction:column;align-items:center;gap:6px}
+.drop:hover,.drop.over{border-color:var(--t-mid);background:var(--t-wash)}
+.drop b{color:var(--t-ink)}
+.drop input{position:absolute;width:1px;height:1px;opacity:0}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.thumb{position:relative;width:64px;height:80px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2) center/cover no-repeat;display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--ink-2)}
+.thumb button{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:12px;line-height:1;padding:0}
+.checks{display:flex;gap:8px;flex-wrap:wrap}
+.radio-row{display:flex;gap:14px;flex-wrap:wrap;font-size:13.5px}
+.radio-row label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.stu-list{display:flex;flex-direction:column;gap:8px}
+.stu{display:grid;grid-template-columns:minmax(120px,220px) 1fr auto auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:8px 10px}
+.stu .thumbs .thumb{width:40px;height:50px}
+.pill{font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap;border:1px solid transparent}
+.pill.wait{background:var(--surface-2);color:var(--ink-2)}
+.pill.run{background:#FFF4D6;color:#8A5A00}
+.pill.done{background:#E3F4E5;color:#1E6B28}
+.pill.fail{background:#FDE7E7;color:#A32020}
+.run-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.progress{flex:1 1 200px;height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--t-mid);transition:width .3s}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.stat .v{font-family:var(--display);font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.missed{display:flex;gap:6px;flex-wrap:wrap}
+.missed span{font-size:12.5px;border-radius:8px;background:#FDE7E7;color:#A32020;padding:3px 8px;font-weight:600}
+.result{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.result-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:var(--surface-2);flex-wrap:wrap}
+.result-head h3{font-size:16px}
+.score{font-family:var(--display);font-weight:700;font-size:18px;font-variant-numeric:tabular-nums}
+.score small{font-family:var(--body);font-size:13px;color:var(--ink-2);font-weight:600;margin-left:6px}
+.qtable-wrap{overflow-x:auto}
+.qtable{width:100%;border-collapse:collapse;font-size:13.5px}
+.qtable th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px 12px;border-bottom:1px solid var(--line);font-weight:700}
+.qtable td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.qtable td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.qmark{border:1px solid transparent;border-radius:999px;padding:3px 10px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap}
+.qmark.correct{background:#E3F4E5;color:#1E6B28}
+.qmark.incorrect{background:#FDE7E7;color:#A32020}
+.qmark.partial{background:#FFF4D6;color:#8A5A00}
+.qmark.unclear{background:var(--surface-2);color:var(--ink-2);border-color:var(--line)}
+.fb{padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.teacher-note{font-size:13px;color:var(--ink-2)}
+.set-wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.keyrow{display:flex;gap:8px;flex-wrap:wrap}
+.keyrow input{flex:1 1 260px}
+input[type=password]{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:8px 10px;font-size:14px;font-family:var(--mono)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pill.done,:root:not([data-theme="light"]) .qmark.correct{background:#173D1D;color:#8FD69A}:root:not([data-theme="light"]) .pill.fail,:root:not([data-theme="light"]) .qmark.incorrect,:root:not([data-theme="light"]) .missed span{background:#4A1C1C;color:#F4A3A3}:root:not([data-theme="light"]) .pill.run,:root:not([data-theme="light"]) .qmark.partial{background:#45360F;color:#F2CD73}}
+:root[data-theme="dark"] .pill.done,:root[data-theme="dark"] .qmark.correct{background:#173D1D;color:#8FD69A}
+:root[data-theme="dark"] .pill.fail,:root[data-theme="dark"] .qmark.incorrect,:root[data-theme="dark"] .missed span{background:#4A1C1C;color:#F4A3A3}
+:root[data-theme="dark"] .pill.run,:root[data-theme="dark"] .qmark.partial{background:#45360F;color:#F2CD73}
+@media (max-width:700px){.stu{grid-template-columns:1fr auto}.stu .thumbs{grid-column:1/-1;order:3}.topnav{margin-left:0;width:100%}.topnav button{flex:1}}
+
 @media (max-width:1100px){
   .view-toggle{display:inline-flex}
   .work{grid-template-columns:minmax(0,1fr)}
@@ -195,14 +265,19 @@ input:focus,textarea:focus{outline:none;border-color:var(--t-mid);box-shadow:0 0
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2.5" fill="none"/><path d="M3 9h18M8 2.5v3M16 2.5v3M7.5 13.5h3M7.5 17h6"/></svg>
       </div>
       <div>
-        <div class="brand-name">Eggly Lesson Planner</div>
-        <div class="brand-sub">Legacy Traditional School · Gradual release: I Do → We Do → You Do</div>
+        <div class="brand-name">Lesson Planner</div>
+        <div class="brand-sub">Gradual-release plans and answer-key grading, K–12</div>
       </div>
     </div>
+    <nav class="topnav" aria-label="Sections">
+      <button type="button" data-nav="plans" aria-current="page">Plans</button>
+      <button type="button" data-nav="grade">Grade work</button>
+      <button type="button" data-nav="settings">Settings</button>
+    </nav>
     <div class="status" id="status" data-s="idle" role="status" aria-live="polite">Loading your plans…</div>
   </header>
 
-  <div class="layout">
+  <div class="layout" id="plansView">
     <aside class="side">
       <button class="btn primary" id="newPlan" type="button">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -213,6 +288,20 @@ input:focus,textarea:focus{outline:none;border-color:var(--t-mid);box-shadow:0 0
     </aside>
     <main id="main"></main>
   </div>
+
+  <div class="layout" id="gradeView" hidden>
+    <aside class="side">
+      <button class="btn primary" id="newAssign" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        New assignment
+      </button>
+      <div class="side-label">Assignments</div>
+      <ul class="plan-list" id="assignList"></ul>
+    </aside>
+    <main id="gmain"></main>
+  </div>
+
+  <main id="settingsView" hidden></main>
 </div>
 
 <script>
@@ -254,6 +343,13 @@ const HEIGHTS = {header:26, big:160, med:100, small:55};
 const EXCELJS = "https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";
 const JSPDF = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 
+const GRADES = ["K","1","2","3","4","5","6","7","8","9","10","11","12"];
+const gradeName = g => g === "K" ? "Kindergarten" : "Grade " + g;
+const gradeOrd = g => g === "K" ? "kindergarten" : g + (g==="1"?"st":g==="2"?"nd":g==="3"?"rd":"th") + "-grade";
+const SET_KEY = "lp-settings";
+const SETTINGS = (()=>{ let o = {}; try { o = JSON.parse(localStorage.getItem(SET_KEY) || "{}"); } catch(e){} return Object.assign({school:"Legacy Traditional School", teacher:"Eggly", grade:"5", apiKey:"", model:"claude-sonnet-5"}, o); })();
+function saveSettings(){ try { localStorage.setItem(SET_KEY, JSON.stringify(SETTINGS)); return true; } catch(e){ return false; } }
+
 /* ---------- state ---------- */
 const S = {
   plans: new Map(), cur: null, day: 0, view: "edit",
@@ -280,18 +376,19 @@ function blankDay(iso, unit){ const d = {iso, date: fmtLong(iso), lesson_tag:"",
 function newPlanObj(){
   const iso = upcomingMonday();
   return {title:"Week of " + dOf(iso).toLocaleDateString("en-US",{month:"short",day:"numeric"}), theme:"math",
-    school:"Legacy Traditional School", teacher:"Eggly", footer:"",
+    grade:SETTINGS.grade, school:SETTINGS.school, teacher:SETTINGS.teacher, footer:"",
     days:[blankDay(iso)], createdAt:Date.now(), updatedAt:Date.now()};
 }
 function normalize(p){
   p = clone(p);
   p.theme = THEMES[p.theme] ? p.theme : "math";
-  p.school ??= "Legacy Traditional School"; p.teacher ??= "Eggly"; p.footer ??= "";
+  p.school ??= SETTINGS.school; p.teacher ??= SETTINGS.teacher; p.footer ??= "";
+  p.grade = GRADES.includes(String(p.grade)) ? String(p.grade) : (GRADES.includes(SETTINGS.grade) ? SETTINGS.grade : "5");
   p.days = Array.isArray(p.days) && p.days.length ? p.days : [blankDay(upcomingMonday())];
   p.days.forEach(d => { DAY_KEYS.forEach(k => { if (typeof d[k] !== "string") d[k] = d[k] == null ? "" : String(d[k]); }); d.lesson_tag ??= ""; d.special = !!d.special; if (!d.date && d.iso) d.date = fmtLong(d.iso); });
   return p;
 }
-function footerFor(p){ return p.footer || [p.school, "Teacher: " + p.teacher, p.days[0]?.unit?.split(",")[0] || THEMES[p.theme].name].filter(Boolean).join("   |   "); }
+function footerFor(p){ return p.footer || [p.school, "Teacher: " + p.teacher, gradeName(p.grade || "5"), p.days[0]?.unit?.split(",")[0] || THEMES[p.theme].name].filter(Boolean).join("   |   "); }
 function applyTheme(){
   const t = THEMES[cur()?.theme || "math"], r = document.documentElement.style;
   r.setProperty("--t-dark","#"+t.dark); r.setProperty("--t-mid","#"+t.mid);
@@ -347,7 +444,7 @@ function renderList(){
     const t = THEMES[p.theme] || THEMES.math;
     const first = p.days[0], last = p.days[p.days.length-1];
     const range = first?.iso ? dOf(first.iso).toLocaleDateString("en-US",{month:"short",day:"numeric"}) + (p.days.length>1 && last.iso ? " – " + dOf(last.iso).toLocaleDateString("en-US",{month:"short",day:"numeric"}) : "") : "";
-    return `<li><button type="button" data-plan="${esc(id)}" aria-current="${id===S.cur}"><span class="dot" style="background:#${t.dark}"></span><span class="pt">${esc(p.title || "Untitled plan")}</span><span class="pm">${esc(t.name)} · ${p.days.length} day${p.days.length===1?"":"s"}${range?" · "+esc(range):""}</span></button></li>`;
+    return `<li><button type="button" data-plan="${esc(id)}" aria-current="${id===S.cur}"><span class="dot" style="background:#${t.dark}"></span><span class="pt">${esc(p.title || "Untitled plan")}</span><span class="pm">${p.grade==="K"?"K":"Gr "+esc(p.grade)} ${esc(t.name)} · ${p.days.length} day${p.days.length===1?"":"s"}${range?" · "+esc(range):""}</span></button></li>`;
   }).join("");
 }
 
@@ -365,6 +462,7 @@ function renderMain(){
   <section class="plan-head">
     <div class="ph-row">
       <input id="p-title" class="title-input" type="text" data-pf="title" value="${esc(p.title)}" aria-label="Plan name" placeholder="Plan name">
+      <label class="grade-pick"><span>Grade</span><select id="p-grade" data-pf="grade">${GRADES.map(g=>`<option value="${g}"${p.grade===g?" selected":""}>${g==="K"?"K":g}</option>`).join("")}</select></label>
       <div class="subjects" role="radiogroup" aria-label="Subject">
         ${Object.entries(THEMES).map(([k,t])=>`<button type="button" class="subj" role="radio" aria-checked="${p.theme===k}" data-theme-pick="${k}"><i style="background:#${t.dark}"></i>${esc(t.name)}</button>`).join("")}
       </div>
@@ -433,7 +531,7 @@ function renderEditor(){
   let h = `
   <div class="day-bar">
     <div class="grp">
-      ${S.sample ? `<button class="btn claude" type="button" data-act="draft" ${S.busy?"disabled":""} title="Claude fills in the empty fields for this day">${drafting?'<span class="spin"></span> Drafting…':icon("spark")+" Draft empty fields with Claude"}</button>` : ""}
+      ${(S.sample || SETTINGS.apiKey) ? `<button class="btn claude" type="button" data-act="draft" ${S.busy?"disabled":""} title="Claude fills in the empty fields for this day">${drafting?'<span class="spin"></span> Drafting…':icon("spark")+" Draft empty fields with Claude"}</button>` : ""}
       <button class="btn ghost" type="button" data-act="dupday">${icon("copy")} Duplicate day</button>
     </div>
     <div class="grp">
@@ -462,7 +560,7 @@ function linesHTML(text, f){
 }
 function renderPreview(){
   const p = cur(), d = curDay(), el = $("#preview"); if (!p || !d || !el) return;
-  let rows = `<div class="pp-row"><div>School</div><div>${esc(p.school)}</div></div><div class="pp-row"><div>Teacher</div><div>${esc(p.teacher)}</div></div>`;
+  let rows = `<div class="pp-row"><div>School</div><div>${esc(p.school)}</div></div><div class="pp-row"><div>Teacher</div><div>${esc(p.teacher)}</div></div><div class="pp-row"><div>Grade</div><div>${esc(gradeName(p.grade))}</div></div>`;
   FIELDS.forEach(f=>{
     if (f.k === "unit" || f.k === "eq") return;
     if (f.sec){ rows += `<div class="pp-sec">${f.sec === "Gradual Release" ? "Gradual Release · I Do → We Do → You Do" : esc(f.sec)}</div>`; return; }
@@ -472,7 +570,7 @@ function renderPreview(){
   });
   el.innerHTML = `
     <div class="pp-head${d.special?" special":""}">
-      <div class="pp-kicker"><span>${esc(d.date || "No date")}</span><span>${esc(THEMES[p.theme].name)}</span></div>
+      <div class="pp-kicker"><span>${esc(d.date || "No date")}</span><span>${esc(gradeName(p.grade))} ${esc(THEMES[p.theme].name)}</span></div>
       <div class="pp-title">${esc(d.lesson_tag || "Untitled lesson")}</div>
       ${d.unit.trim() ? `<div class="pp-unit">${esc(d.unit)}</div>` : ""}
       ${d.special ? `<span class="pp-flag">Assessment / special day</span>` : ""}
@@ -494,7 +592,7 @@ function createPlan(){
 }
 main.addEventListener("input", e=>{
   const t = e.target, p = cur(); if (!p) return;
-  if (t.dataset.pf){ p[t.dataset.pf] = t.value; touch(S.cur); renderPreview(); if (t.dataset.pf==="title") renderList(); return; }
+  if (t.dataset.pf){ p[t.dataset.pf] = t.value; touch(S.cur); renderPreview(); if (t.dataset.pf==="title" || t.dataset.pf==="grade") renderList(); return; }
   const k = t.dataset.df; if (!k || k === "iso" || k === "special") return;
   const d = curDay(); d[k] = t.value; touch(S.cur);
   if (t.tagName === "TEXTAREA") grow(t);
@@ -598,7 +696,8 @@ async function buildXlsx(p){
   const rows = [
     {label:"School", h:"small", val:()=>p.school},
     {label:"Date", h:"small", val:d=>d.date},
-    {label:"Teacher", h:"small", val:()=>p.teacher}
+    {label:"Teacher", h:"small", val:()=>p.teacher},
+    {label:"Grade", h:"small", val:()=>gradeName(p.grade)}
   ];
   FIELDS.forEach(f=>{
     if (f.sec) rows.push({sec:f.xl});
@@ -692,7 +791,7 @@ function buildPdf(p){
     y += 74;
     // meta line
     doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(80,86,96);
-    doc.text(pdfText("School: " + p.school + "     Teacher: " + p.teacher), M, y + 8); y += 18;
+    doc.text(pdfText("School: " + p.school + "     Teacher: " + p.teacher + "     " + gradeName(p.grade)), M, y + 8); y += 18;
     if (d.eq.trim()){
       doc.setFont("helvetica","bold"); doc.setFontSize(10.5);
       const lines = doc.splitTextToSize(pdfText(d.eq), CW - 24);
@@ -719,13 +818,13 @@ function buildPdf(p){
 
 /* ---------- Draft with Claude ---------- */
 async function draftDay(){
-  const p = cur(), d = curDay(); if (!p || !d || !S.sample || S.busy) return;
+  const p = cur(), d = curDay(); if (!p || !d || !(S.sample || SETTINGS.apiKey) || S.busy) return;
   const t = THEMES[p.theme];
   const empty = DAY_KEYS.filter(k => !d[k].trim() && !(FIELDS.find(f=>f.k===k).opt && !["eq","objective"].includes(k)));
   if (!empty.length){ S.msg = {text:"Every main field for this day already has something in it."}; renderMain(); return; }
   if (!d.lesson_tag.trim() && !d.unit.trim()){ S.msg = {text:"Add the lesson or the unit first so Claude knows what to plan.", err:true}; renderMain(); return; }
   const have = {}; DAY_KEYS.forEach(k=>{ if (d[k].trim()) have[k] = d[k]; });
-  const prompt = `You are filling in one day of a 5th-grade gradual-release lesson plan for Teacher ${p.teacher} at ${p.school} (Las Vegas, Nevada).
+  const prompt = `You are filling in one day of a ${gradeOrd(p.grade)} gradual-release lesson plan for Teacher ${p.teacher} at ${p.school}.
 Subject: ${t.name}
 Lesson: ${d.lesson_tag || "(not given)"}
 Unit / curriculum: ${d.unit || "(not given)"}
@@ -748,7 +847,7 @@ Return one JSON object whose keys are exactly the requested field names and whos
   S.busy = "draft"; S.msg = null; renderEditor(); renderMain();
   const planId = S.cur, dayRef = d;
   try {
-    const out = await S.sample.json(prompt, {modelTier:"default"});
+    const out = await aiJson(prompt);
     let n = 0;
     if (out && typeof out === "object"){
       empty.forEach(k=>{ if (typeof out[k] === "string" && out[k].trim() && !dayRef[k].trim()){ dayRef[k] = out[k].trim(); n++; } });
@@ -759,7 +858,7 @@ Return one JSON object whose keys are exactly the requested field names and whos
     const c = e && e.code;
     S.msg = c === "not_granted" ? {text:"Claude drafting wasn't allowed in this view.", err:true}
       : c === "rate_limited" ? {text:"Too many drafts in a row. Wait a minute and try again.", err:true}
-      : {text:"Claude couldn't draft this day (" + (c || "error") + "). Try again.", err:true};
+      : {text:"Claude couldn't draft this day: " + ((e && e.message) || c || "error"), err:true};
     if (c === "not_granted") S.sample = null;
   }
   S.busy = null; renderMain();
@@ -782,6 +881,541 @@ const browserDownloads = {
     return {status:"saved"};
   }
 };
+
+/* ---------- Claude API (teacher's own key) ---------- */
+const MODELS = [
+  {id:"claude-sonnet-5", name:"Claude Sonnet 5 (most accurate)"},
+  {id:"claude-haiku-4-5", name:"Claude Haiku 4.5 (cheaper, faster)"}
+];
+async function callClaude(content, maxTokens){
+  if (!SETTINGS.apiKey) throw {code:"no_key", message:"Add your Claude API key in Settings first."};
+  let r;
+  try {
+    r = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{
+        "content-type":"application/json",
+        "x-api-key":SETTINGS.apiKey,
+        "anthropic-version":"2023-06-01",
+        "anthropic-dangerous-direct-browser-access":"true"
+      },
+      body: JSON.stringify({model:SETTINGS.model || "claude-sonnet-5", max_tokens:maxTokens || 4096, messages:[{role:"user", content}]})
+    });
+  } catch(e){ throw {code:"network", message:"Couldn't reach Claude. Check your internet connection."}; }
+  let body = null; try { body = await r.json(); } catch(e){}
+  if (!r.ok){
+    const m = body && body.error && body.error.message || ("HTTP " + r.status);
+    const friendly = r.status === 401 ? "Your API key was rejected. Check it in Settings."
+      : r.status === 429 ? "Too many requests right now. Wait a minute and try again."
+      : r.status === 529 || r.status === 503 ? "Claude is busy right now. Try again in a minute."
+      : r.status === 400 && /credit|balance|billing/i.test(m) ? "Your Anthropic account is out of credits. Add credits at console.anthropic.com."
+      : m;
+    throw {code:"http_" + r.status, message:friendly, retry: r.status === 429 || r.status >= 500};
+  }
+  return (body.content || []).filter(b=>b.type==="text").map(b=>b.text).join("");
+}
+function parseJSON(text){
+  const a = text.indexOf("{"), b = text.lastIndexOf("}");
+  if (a < 0 || b < a) throw {code:"invalid_json", message:"Claude's answer wasn't in the expected format. Try again."};
+  try { return JSON.parse(text.slice(a, b+1)); } catch(e){ throw {code:"invalid_json", message:"Claude's answer wasn't in the expected format. Try again."}; }
+}
+async function aiJson(prompt){
+  if (S.sample) return S.sample.json(prompt, {modelTier:"default"});
+  return parseJSON(await callClaude([{type:"text", text:prompt}], 4096));
+}
+
+/* ---------- file prep: shrink photos, keep PDFs ---------- */
+function readAsDataURL(file){ return new Promise((res, rej)=>{ const fr = new FileReader(); fr.onload = ()=>res(fr.result); fr.onerror = ()=>rej(fr.error); fr.readAsDataURL(file); }); }
+async function prepFile(file){
+  const name = file.name || "file";
+  if (/heic|heif/i.test(file.type) || /\.hei[cf]$/i.test(name)) throw new Error(name + " is an iPhone HEIC photo. Export it as JPG, or set the camera to Most Compatible.");
+  if (file.type === "application/pdf" || /\.pdf$/i.test(name)){
+    if (file.size > 30 * 1024 * 1024) throw new Error(name + " is over 30 MB. Scan at a lower resolution.");
+    const url = await readAsDataURL(file);
+    return {name, kind:"pdf", media:"application/pdf", b64:url.split(",")[1], preview:null};
+  }
+  if (!/^image\//.test(file.type)) throw new Error(name + " isn't a photo or PDF.");
+  const url = await readAsDataURL(file);
+  const img = await new Promise((res, rej)=>{ const i = new Image(); i.onload = ()=>res(i); i.onerror = ()=>rej(new Error("Couldn't open " + name + ".")); i.src = url; });
+  const max = 1568, sc = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+  const cx = c.getContext("2d"); cx.fillStyle = "#fff"; cx.fillRect(0,0,c.width,c.height); cx.drawImage(img, 0, 0, c.width, c.height);
+  const out = c.toDataURL("image/jpeg", 0.85);
+  return {name, kind:"img", media:"image/jpeg", b64:out.split(",")[1], preview:out};
+}
+function fileBlock(f){
+  return f.kind === "pdf"
+    ? {type:"document", source:{type:"base64", media_type:"application/pdf", data:f.b64}}
+    : {type:"image", source:{type:"base64", media_type:f.media, data:f.b64}};
+}
+
+/* ---------- grading state ---------- */
+const G_KEY = "lp-grading-v1";
+const G = { list:new Map(), cur:null, keyFiles:new Map(), stuFiles:new Map(), running:false, stop:false, msg:null, confirm:null, split:"each" };
+const gmain = $("#gmain");
+function gLoad(){ try { const o = JSON.parse(localStorage.getItem(G_KEY) || "{}"); Object.entries(o).forEach(([k,v])=>G.list.set(k, v)); } catch(e){} }
+let gSaveT = null;
+function gSave(now){
+  clearTimeout(gSaveT);
+  const run = ()=>{ try { const o = {}; G.list.forEach((v,k)=>o[k]=v); localStorage.setItem(G_KEY, JSON.stringify(o)); } catch(e){ G.msg = {text:"Couldn't save results in this browser (storage may be full). Export the CSV to keep them.", err:true}; } };
+  if (now) run(); else gSaveT = setTimeout(run, 500);
+}
+function gCur(){ return G.list.get(G.cur) || null; }
+function gSorted(){ return [...G.list.entries()].sort((a,b)=>(b[1].updatedAt||0)-(a[1].updatedAt||0)); }
+function newAssignment(){
+  const id = "a" + uid().slice(1);
+  G.list.set(id, {name:"Untitled assignment", grade:SETTINGS.grade, subject:"math", keyText:"", rules:{equivalent:true, partial:true, spelling:false}, students:[], createdAt:Date.now(), updatedAt:Date.now()});
+  G.cur = id; G.msg = null; G.confirm = null; gSave(true); renderGrade();
+  const t = $("#g-name"); if (t){ t.focus(); t.select(); }
+}
+function scoreOf(res){
+  let e = 0, pAll = 0, unclear = 0;
+  (res.questions || []).forEach(q=>{ e += +q.points_earned || 0; pAll += +q.points_possible || 0; if (q.result === "unclear") unclear++; });
+  return {earned: Math.round(e*100)/100, possible: Math.round(pAll*100)/100, pct: pAll ? Math.round(e / pAll * 100) : 0, unclear};
+}
+
+/* ---------- grading render ---------- */
+function renderAssignList(){
+  const ul = $("#assignList"), items = gSorted();
+  if (!items.length){ ul.innerHTML = `<li style="color:var(--muted);font-size:13px;padding:4px 2px">No assignments yet.</li>`; return; }
+  ul.innerHTML = items.map(([id,a])=>{
+    const graded = a.students.filter(s=>s.result).length;
+    return `<li><button type="button" data-assign="${esc(id)}" aria-current="${id===G.cur}"><span class="dot" style="background:#${(THEMES[a.subject]||THEMES.math).dark}"></span><span class="pt">${esc(a.name || "Untitled assignment")}</span><span class="pm">${a.grade==="K"?"K":"Gr "+esc(a.grade)} · ${graded}/${a.students.length} graded</span></button></li>`;
+  }).join("");
+}
+function thumbHTML(f, i, owner){
+  return `<div class="thumb" style="${f.preview?`background-image:url('${f.preview}')`:""}" title="${esc(f.name)}">${f.kind==="pdf"?"PDF":""}<button type="button" data-rmfile="${owner}" data-i="${i}" aria-label="Remove ${esc(f.name)}">×</button></div>`;
+}
+function renderGrade(){
+  renderAssignList();
+  const a = gCur();
+  const t = THEMES[a?.subject || "math"], r = document.documentElement.style;
+  r.setProperty("--t-dark","#"+t.dark); r.setProperty("--t-mid","#"+t.mid); r.setProperty("--t-light","#"+t.light); r.setProperty("--t-border","#"+t.border);
+  if (!a){
+    gmain.innerHTML = `<div class="empty-state"><h2 style="font-size:22px">Grade student work with an answer key</h2><p>Type or upload the answer key, add photos or scans of each student's paper, and the app marks every question and totals the score. The free text reader needs no account; Claude grading (optional, your own API key) also reads handwriting. You check and adjust every mark.</p><button class="btn primary" type="button" data-gact="new">New assignment</button></div>`;
+    return;
+  }
+  const kf = G.keyFiles.get(G.cur) || [];
+  const pending = a.students.filter(s=>!s.result).length;
+  const withFiles = a.students.filter(s=>(G.stuFiles.get(s.id)||[]).length).length;
+  const results = a.students.filter(s=>s.result);
+  const toGrade = a.students.filter(s=>!s.result && (G.stuFiles.get(s.id)||[]).length).length;
+  const canRun = (a.keyText.trim() || kf.length) && withFiles && !G.running;
+  let summary = "";
+  if (results.length){
+    const sc = results.map(s=>scoreOf(s.result));
+    const avg = Math.round(sc.reduce((x,y)=>x+y.pct,0) / sc.length);
+    const miss = {};
+    results.forEach(s=>(s.result.questions||[]).forEach(q=>{ if (q.result !== "correct") miss[q.q] = (miss[q.q]||0) + 1; }));
+    const top = Object.entries(miss).sort((x,y)=>y[1]-x[1]).slice(0,6);
+    const review = sc.filter(x=>x.unclear).length;
+    summary = `<div class="summary">
+      <div class="stat"><div class="k">Graded</div><div class="v">${results.length}<span style="font-size:15px;color:var(--muted)"> / ${a.students.length}</span></div></div>
+      <div class="stat"><div class="k">Class average</div><div class="v">${avg}%</div></div>
+      <div class="stat"><div class="k">Need your review</div><div class="v">${review}</div></div>
+    </div>
+    ${top.length?`<div><div class="lab" style="margin-bottom:6px">Most missed</div><div class="missed">${top.map(([q,n])=>`<span>Q${esc(q)}: ${n} missed</span>`).join("")}</div></div>`:""}`;
+  }
+  gmain.innerHTML = `
+  <section class="card">
+    <div class="ph-row">
+      <input id="g-name" class="title-input" type="text" data-ga="name" value="${esc(a.name)}" aria-label="Assignment name" placeholder="Assignment name" style="font-family:var(--display);font-weight:700;font-size:24px;border:0;background:none;padding:2px 0;flex:1 1 280px">
+      <div class="actions">
+        ${S.downloads && results.length ? `<button class="btn" type="button" data-gact="csv">${icon("sheet")} Scores CSV</button>`:""}
+        ${G.confirm==="assign" ? `<span class="confirm">Delete this assignment and its results?<button class="btn danger-solid" type="button" data-gact="del-yes">Delete</button><button class="btn ghost" type="button" data-gact="cancel">Keep it</button></span>` : `<button class="btn ghost danger" type="button" data-gact="del">Delete</button>`}
+      </div>
+    </div>
+    ${G.msg ? `<div class="note${G.msg.err?" err":""}">${esc(G.msg.text)}</div>` : ""}
+    <div class="note">${engine()==="free" ? `Grading with the <b>free text reader</b>. It works best on typed worksheets or neat print with answers numbered like "1) 16.25", one per line. Long answers are left for you to check.` : `Grading with <b>Claude</b> (your API key).`} <button class="btn ghost" type="button" data-nav="settings">Change</button></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="step">1</span>Answer key</h2>
+    <div class="grid2">
+      <div class="field"><label for="g-grade">Grade</label><select id="g-grade" data-ga="grade">${GRADES.map(g=>`<option value="${g}"${a.grade===g?" selected":""}>${gradeName(g)}</option>`).join("")}</select></div>
+      <div class="field"><label for="g-subject">Subject</label><select id="g-subject" data-ga="subject">${Object.entries(THEMES).map(([k,v])=>`<option value="${k}"${a.subject===k?" selected":""}>${esc(v.name)}</option>`).join("")}</select></div>
+    </div>
+    <div class="field"><label for="g-key">Type the answers <span class="hint">One per line. Add points like "(2 pts)" if a question is worth more than 1.</span></label>
+      <textarea id="g-key" data-ga="keyText" rows="5" placeholder="1) 16.25&#10;2) 7.17&#10;3) 1.56 (2 pts)&#10;4) Accept any sentence that uses the word &quot;regroup&quot; correctly">${esc(a.keyText)}</textarea></div>
+    <div class="field"><span class="lab">Or upload the answer key <span class="hint">Photos or a PDF. Uploaded files aren't saved, so add them again after reloading.</span></span>
+      <label class="drop" data-dropfor="key"><input type="file" accept="image/*,application/pdf" multiple data-filefor="key"><span><b>Choose files</b> or drop them here</span></label>
+      ${kf.length?`<div class="thumbs">${kf.map((f,i)=>thumbHTML(f,i,"key")).join("")}</div>`:""}
+    </div>
+    <div class="checks">
+      <label class="check"><input type="checkbox" data-rule="equivalent" ${a.rules.equivalent?"checked":""}> Accept equivalent answers (1/2 = 0.5)</label>
+      ${engine()==="claude" ? `<label class="check"><input type="checkbox" data-rule="partial" ${a.rules.partial?"checked":""}> Give partial credit</label>` : ""}
+      <label class="check"><input type="checkbox" data-rule="spelling" ${a.rules.spelling?"checked":""}> Ignore spelling mistakes</label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="step">2</span>Student work</h2>
+    <p class="card-sub">${engine()==="free" ? "Photos stay on this computer; the free reader works inside your browser." : "Use first names or student numbers. Photos are sent to Anthropic for grading and aren't stored on this site."}</p>
+    <div class="radio-row" role="radiogroup" aria-label="How the files are split">
+      <label><input type="radio" name="g-split" value="each" ${G.split==="each"?"checked":""}> Each file is a different student</label>
+      <label><input type="radio" name="g-split" value="one" ${G.split==="one"?"checked":""}> All files are one student's pages</label>
+    </div>
+    <label class="drop" data-dropfor="students"><input type="file" accept="image/*,application/pdf" multiple data-filefor="students"><span><b>Add photos or scans</b> or drop them here</span></label>
+    <div class="stu-list">
+      ${a.students.map(st=>{
+        const fs = G.stuFiles.get(st.id) || [];
+        const pill = st.status==="running" ? `<span class="pill run">Grading…</span>` : st.result ? `<span class="pill done">${scoreOf(st.result).pct}%</span>` : st.error ? `<span class="pill fail" title="${esc(st.error)}">Failed</span>` : fs.length ? `<span class="pill wait">Ready</span>` : `<span class="pill wait">Needs photos</span>`;
+        return `<div class="stu"><input type="text" data-stu="${st.id}" value="${esc(st.name)}" aria-label="Student name" placeholder="Student name">
+          <div class="thumbs">${fs.map((f,i)=>thumbHTML(f,i,st.id)).join("")}<label class="thumb" style="cursor:pointer" title="Add a page">+<input type="file" accept="image/*,application/pdf" multiple data-filefor="${st.id}" style="position:absolute;width:1px;height:1px;opacity:0"></label></div>
+          ${pill}
+          <button class="btn ghost" type="button" data-rmstu="${st.id}" aria-label="Remove ${esc(st.name)}">Remove</button></div>
+          ${st.error?`<div class="note err" style="margin-top:-4px">${esc(st.name)}: ${esc(st.error)}</div>`:""}`;
+      }).join("")}
+    </div>
+    <div class="run-bar">
+      ${G.running ? `<button class="btn" type="button" data-gact="stop">Stop after this one</button>` :
+        (toGrade ? `<button class="btn primary" type="button" data-gact="run" ${canRun?"":"disabled"}>Grade ${toGrade} ${results.length?"ungraded ":""}paper${toGrade===1?"":"s"}</button>` : `<button class="btn primary" type="button" disabled>${a.students.length ? (results.length ? "All papers graded" : "Add photos to grade") : "Add student work first"}</button>`)}
+      ${results.length && !G.running ? `<button class="btn ghost" type="button" data-gact="regrade-all" ${canRun?"":"disabled"}>Regrade everyone</button>`:""}
+      ${G.running ? `<div class="progress" aria-label="Progress"><i style="width:${G.progress||0}%"></i></div>`:""}
+    </div>
+  </section>
+
+  ${results.length ? `<section class="card">
+    <h2><span class="step">3</span>Results</h2>
+    <p class="card-sub">Click a mark to change it (correct → incorrect → partial). Scores update right away.</p>
+    ${summary}
+    ${results.map(st=>resultHTML(st)).join("")}
+  </section>` : ""}`;
+  gmain.querySelectorAll("textarea").forEach(grow);
+}
+function resultHTML(st){
+  const r = st.result, sc = scoreOf(r);
+  return `<div class="result" id="res-${st.id}">
+    <div class="result-head"><h3>${esc(st.name || "Student")}</h3>
+      <div class="actions"><span class="score">${sc.earned} / ${sc.possible}<small>${sc.pct}%</small></span>
+      ${sc.unclear?`<span class="pill run">${sc.unclear} to review</span>`:""}
+      <button class="btn ghost" type="button" data-regrade="${st.id}" ${(G.stuFiles.get(st.id)||[]).length && !G.running?"":"disabled"} title="${(G.stuFiles.get(st.id)||[]).length?"Grade this paper again":"Add the photos again to regrade"}">Regrade</button></div></div>
+    <div class="qtable-wrap"><table class="qtable"><thead><tr><th>Q</th><th>Student wrote</th><th>Answer key</th><th>Mark</th><th>Points</th><th>Note</th></tr></thead><tbody>
+      ${(r.questions||[]).map((q,i)=>`<tr><td class="num">${esc(q.q)}</td><td>${esc(q.student_answer)}</td><td>${esc(q.correct_answer)}</td>
+        <td><button type="button" class="qmark ${esc(q.result)}" data-mark="${st.id}" data-i="${i}">${q.result==="correct"?"✓ Correct":q.result==="incorrect"?"✗ Incorrect":q.result==="partial"?"½ Partial":"? Unclear"}</button></td>
+        <td class="num">${+q.points_earned || 0} / ${+q.points_possible || 0}</td><td>${esc(q.note || "")}</td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="fb">
+      <label class="lab" for="fb-${st.id}">Feedback for ${esc(st.name || "the student")}</label>
+      <textarea id="fb-${st.id}" data-fb="${st.id}" rows="2">${esc(r.feedback || "")}</textarea>
+      <div class="actions"><button class="btn ghost" type="button" data-copyfb="${st.id}">${icon("copy")} Copy feedback</button></div>
+      ${r.teacher_notes?`<div class="teacher-note"><b>For you:</b> ${esc(r.teacher_notes)}</div>`:""}
+      ${r.ocrText!=null?`<details class="details"><summary>What the reader saw</summary><pre style="white-space:pre-wrap;font-family:var(--mono);font-size:12px;margin:8px 0 0;background:var(--bg);border-radius:8px;padding:8px 10px">${esc(r.ocrText || "(no text found)")}</pre></details>`:""}
+    </div>
+  </div>`;
+}
+
+/* ---------- grading actions ---------- */
+async function addFiles(files, target){
+  const a = gCur(); if (!a || !files.length) return;
+  G.msg = null;
+  const prepped = [], errs = [];
+  for (const f of files){ try { prepped.push(await prepFile(f)); } catch(e){ errs.push(e.message); } }
+  if (target === "key"){
+    G.keyFiles.set(G.cur, [...(G.keyFiles.get(G.cur)||[]), ...prepped]);
+  } else if (target === "students"){
+    if (G.split === "one" && prepped.length){
+      const id = "s" + uid().slice(1);
+      a.students.push({id, name: "Student " + (a.students.length + 1)}); G.stuFiles.set(id, prepped);
+    } else prepped.forEach(f=>{
+      const id = "s" + uid().slice(1);
+      const nm = f.name.replace(/\.[^.]+$/,"").replace(/[_-]+/g," ").trim();
+      a.students.push({id, name: /^(img|image|scan|photo|dsc|pxl)\s?\d/i.test(nm) || !nm ? "Student " + (a.students.length + 1) : nm});
+      G.stuFiles.set(id, [f]);
+    });
+  } else {
+    const st = a.students.find(s=>s.id===target);
+    if (st){ G.stuFiles.set(st.id, [...(G.stuFiles.get(st.id)||[]), ...prepped]); st.error = null; }
+  }
+  if (errs.length) G.msg = {text: errs.join(" "), err:true};
+  a.updatedAt = Date.now(); gSave(); renderGrade();
+}
+function gradePrompt(a, st){
+  return `You are grading a ${gradeOrd(a.grade)} ${THEMES[a.subject].name} assignment called "${a.name}" for a teacher.
+
+Grading rules:
+- Match each answer on the student's paper to the answer key by question number.
+- Equivalent answers (for example 1/2 and 0.5, or $3.50 and 3.5): ${a.rules.equivalent ? "count as correct" : "only the answer exactly as written in the key counts"}.
+- Partial credit: ${a.rules.partial ? "allowed when work shows a correct method with a small slip, or a multi-part answer is partly right" : "not allowed; each question is fully right or wrong"}.
+- Spelling mistakes: ${a.rules.spelling ? "ignore them when the meaning is clearly right" : "count them only if the key requires exact spelling"}.
+- Point values: use any points given in the key (like "(2 pts)"); otherwise each question is worth 1 point.
+- If you cannot read a student's handwriting with confidence, mark it "unclear" with 0 points and describe what you see. Never guess a student's answer.
+- Include every question from the answer key, even if the student left it blank (blank = incorrect, student_answer "(blank)").
+
+Reply with ONLY a JSON object, no other text:
+{"questions":[{"q":"1","student_answer":"what the student wrote","correct_answer":"from the key","result":"correct|incorrect|partial|unclear","points_earned":1,"points_possible":1,"note":"short reason, especially for wrong or partial answers"}],
+"feedback":"2-3 sentences written to the student, kind and specific, at a ${gradeOrd(a.grade)} reading level: one thing done well and one thing to fix",
+"teacher_notes":"one sentence on patterns or misconceptions for the teacher"}`;
+}
+/* ---------- free grader: text reader in the browser (Tesseract.js) ---------- */
+const TESS = "https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js";
+const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+const PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+function engine(){ return SETTINGS.engine === "claude" && SETTINGS.apiKey ? "claude" : "free"; }
+async function ocrWorker(){
+  if (G.ocr) return G.ocr;
+  await loadScript(TESS);
+  G.ocr = await Tesseract.createWorker("eng");
+  return G.ocr;
+}
+async function pagesOf(f){
+  if (f.kind !== "pdf") return [f.preview || ("data:" + f.media + ";base64," + f.b64)];
+  await loadScript(PDFJS);
+  pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+  const bytes = Uint8Array.from(atob(f.b64), c=>c.charCodeAt(0));
+  const pdf = await pdfjsLib.getDocument({data:bytes}).promise, out = [];
+  for (let i = 1; i <= Math.min(pdf.numPages, 20); i++){
+    const pg = await pdf.getPage(i), vp = pg.getViewport({scale:2});
+    const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+    const cx = c.getContext("2d"); cx.fillStyle = "#fff"; cx.fillRect(0,0,c.width,c.height);
+    await pg.render({canvasContext:cx, viewport:vp}).promise;
+    out.push(c.toDataURL("image/png"));
+  }
+  return out;
+}
+async function readFiles(files){
+  const w = await ocrWorker(), lines = [];
+  for (const f of files){
+    for (const src of await pagesOf(f)){
+      const {data} = await w.recognize(src);
+      (data.lines || []).forEach(l=>lines.push({text:l.text.trim(), conf:Math.round(l.confidence || 0)}));
+    }
+  }
+  return lines.filter(l=>l.text);
+}
+const Q_RE = /^\s*(?:q(?:uestion)?\.?\s*|#\s*)?(\d{1,3})\s*[\).:\-\]]\s*(.*)$/i;
+function parseKey(text){
+  const map = new Map();
+  String(text).split("\n").forEach(line=>{
+    const m = line.match(Q_RE); if (!m || map.has(m[1])) return;
+    let ans = m[2], pts = 1;
+    const pm = ans.match(/\(\s*(\d+(?:\.\d+)?)\s*(?:pts?|points?)\s*\)/i);
+    if (pm){ pts = +pm[1]; ans = ans.replace(pm[0], ""); }
+    ans = ans.trim();
+    map.set(m[1], {answer:ans, alts: ans.split(/\s+or\s+|\s*\|\s*/i).map(s=>s.trim()).filter(Boolean), pts});
+  });
+  return map;
+}
+function parseStudent(lines){
+  const map = new Map();
+  lines.forEach(l=>{ const m = l.text.match(Q_RE); if (m && !map.has(m[1])) map.set(m[1], {answer:m[2].trim(), conf:l.conf}); });
+  return map;
+}
+const norm = s => String(s).toLowerCase().replace(/[“”"'`]/g,"").replace(/\s+/g," ").replace(/[.,;:!?]+$/,"").trim();
+function toNum(s){
+  let t = String(s).toLowerCase().replace(/[$,\s]/g,"").replace(/^\((.*)\)$/,"$1");
+  const pct = t.endsWith("%"); if (pct) t = t.slice(0,-1);
+  let v = null, m;
+  if ((m = String(s).trim().match(/^(-?\d+)\s+(\d+)\/(\d+)$/))) v = +m[1] + (+m[2] / +m[3]) * (m[1].startsWith("-") ? -1 : 1);
+  else if ((m = t.match(/^(-?\d+)\/(\d+)$/))) v = +m[1] / +m[2];
+  else if (/^-?\d*\.?\d+$/.test(t)) v = +t;
+  return v == null || !isFinite(v) ? null : {v, pct};
+}
+function lev(a, b){
+  const d = Array.from({length:a.length+1}, (_,i)=>[i]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
+    d[i][j] = Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1] + (a[i-1]===b[j-1]?0:1));
+  return d[a.length][b.length];
+}
+function matchOne(stu, key, rules){
+  const s = norm(stu), k = norm(key);
+  if (!s) return false;
+  if (s === k || s.replace(/\s/g,"") === k.replace(/\s/g,"")) return true;
+  const letter = x => (x.match(/^\(?([a-e])\)?$/) || [])[1];
+  if (letter(k) && letter(s)) return letter(k) === letter(s);
+  if (rules.equivalent){
+    const a = toNum(stu), b = toNum(key);
+    if (a && b && (Math.abs(a.v - b.v) < 1e-9 || (a.pct !== b.pct && Math.abs((a.pct ? a.v/100 : a.v) - (b.pct ? b.v/100 : b.v)) < 1e-9))) return true;
+  }
+  if (rules.spelling && /[a-z]{3,}/.test(k) && !toNum(key)){
+    const dist = lev(s, k); if (dist <= Math.max(1, Math.floor(k.length * 0.2))) return true;
+  }
+  return false;
+}
+async function freeGrade(a, st){
+  const kf = G.keyFiles.get(G.cur) || [], sf = G.stuFiles.get(st.id) || [];
+  let keyText = a.keyText;
+  if (kf.length){ const kl = await readFiles(kf); keyText += "\n" + kl.map(l=>l.text).join("\n"); }
+  const key = parseKey(keyText);
+  if (!key.size) throw {message:"The free reader couldn't find numbered answers in the key. Type the key like \"1) 16.25\", one per line."};
+  const lines = await readFiles(sf);
+  const stu = parseStudent(lines);
+  const questions = [];
+  key.forEach((k, q)=>{
+    const s = stu.get(q), wordy = k.answer.split(/\s+/).length > 6;
+    let result, note = "";
+    if (wordy){ result = "unclear"; note = "Long answer: check this one yourself."; }
+    else if (!s || !s.answer){ result = "unclear"; note = "Couldn't find this answer on the paper. Check it yourself."; }
+    else if (k.alts.some(alt=>matchOne(s.answer, alt, a.rules))) result = "correct";
+    else if (s.conf < 60){ result = "unclear"; note = `Hard to read (${s.conf}% sure). Check it yourself.`; }
+    else { result = "incorrect"; if (s.conf < 80) note = `Read with ${s.conf}% confidence.`; }
+    questions.push({q, student_answer: s ? (s.answer || "(blank)") : "(not found)", correct_answer:k.answer, result, points_earned: result === "correct" ? k.pts : 0, points_possible:k.pts, note});
+  });
+  const right = questions.filter(q=>q.result==="correct").map(q=>"#"+q.q), wrong = questions.filter(q=>q.result==="incorrect").map(q=>"#"+q.q);
+  const young = a.grade === "K" || +a.grade <= 2;
+  let feedback = right.length ? (young ? `Good job on ${right.slice(0,4).join(", ")}!` : `Nice work on ${right.slice(0,4).join(", ")}.`) : "Thanks for your hard work.";
+  if (wrong.length) feedback += young ? ` Let's look at ${wrong.slice(0,4).join(", ")} again together.` : ` Take another look at ${wrong.slice(0,4).join(", ")} and check your work.`;
+  else if (right.length === questions.length) feedback += " Every answer is correct. Great job!";
+  return {questions, feedback, teacher_notes: "Graded by the free text reader. It matches answers word for word and can misread handwriting, so check every mark.", ocrText: lines.map(l=>l.text).join("\n")};
+}
+
+async function gradeOne(a, st){
+  if (engine() === "free") return freeGrade(a, st);
+  const kf = G.keyFiles.get(G.cur) || [], sf = G.stuFiles.get(st.id) || [];
+  const content = [{type:"text", text: gradePrompt(a, st)}, {type:"text", text:"ANSWER KEY (typed):\n" + (a.keyText.trim() || "(none typed; see the answer key pages below)")}];
+  if (kf.length){ content.push({type:"text", text:"ANSWER KEY pages:"}); kf.forEach(f=>content.push(fileBlock(f))); }
+  content.push({type:"text", text:`STUDENT WORK (${sf.length} page${sf.length===1?"":"s"}):`});
+  sf.forEach(f=>content.push(fileBlock(f)));
+  let text;
+  try { text = await callClaude(content, 8000); }
+  catch(e){ if (e.retry){ await new Promise(r=>setTimeout(r, 4000)); text = await callClaude(content, 8000); } else throw e; }
+  const out = parseJSON(text);
+  if (!Array.isArray(out.questions)) throw {message:"Claude's answer was missing the question list. Try again."};
+  out.questions = out.questions.map(q=>({q:String(q.q ?? ""), student_answer:String(q.student_answer ?? ""), correct_answer:String(q.correct_answer ?? ""),
+    result:["correct","incorrect","partial","unclear"].includes(q.result) ? q.result : "unclear",
+    points_earned: Math.max(0, +q.points_earned || 0), points_possible: Math.max(0, +q.points_possible || (q.points_possible===0?0:1)), note:String(q.note ?? "")}));
+  out.feedback = String(out.feedback || ""); out.teacher_notes = String(out.teacher_notes || "");
+  return out;
+}
+async function runGrading(all, onlyId){
+  const a = gCur(); if (!a || G.running) return;
+  const queue = a.students.filter(s=>(G.stuFiles.get(s.id)||[]).length && (onlyId ? s.id === onlyId : (all || !s.result)));
+  if (!queue.length){ G.msg = {text:"No papers to grade. Add photos for each student first.", err:true}; renderGrade(); return; }
+  G.running = true; G.stop = false; G.msg = null; G.progress = 0;
+  let done = 0, failed = 0;
+  for (const st of queue){
+    if (G.stop) break;
+    st.status = "running"; st.error = null; renderGrade();
+    try { st.result = await gradeOne(a, st); st.gradedAt = Date.now(); }
+    catch(e){ st.error = (e && e.message) || "Something went wrong."; failed++; if (e && e.code === "http_401") { st.status = null; break; } }
+    st.status = null; done++; G.progress = Math.round(done / queue.length * 100);
+    a.updatedAt = Date.now(); gSave(true);
+  }
+  G.running = false;
+  if (G.ocr){ try { await G.ocr.terminate(); } catch(e){} G.ocr = null; }
+  G.msg = failed ? {text:`${failed} paper${failed===1?"":"s"} couldn't be graded. See the note under each name.`, err:true} : G.stop ? {text:"Stopped. The rest are still waiting."} : {text:`Graded ${done} paper${done===1?"":"s"}. Check anything marked Unclear.`};
+  renderGrade();
+}
+function exportCSV(){
+  const a = gCur(); if (!a) return;
+  const rows = [["Student","Points earned","Points possible","Percent","Needs review","Feedback"]];
+  a.students.filter(s=>s.result).forEach(s=>{ const sc = scoreOf(s.result); rows.push([s.name, sc.earned, sc.possible, sc.pct + "%", sc.unclear ? "yes" : "", s.result.feedback]); });
+  const csv = rows.map(r=>r.map(v=>{ v = String(v ?? ""); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; }).join(",")).join("\r\n");
+  S.downloads.save({filename: fileBase({title:a.name}) + "_scores.csv", data: new Blob(["﻿" + csv], {type:"text/csv"})}).catch(()=>{});
+}
+
+/* ---------- grading events ---------- */
+$("#newAssign").addEventListener("click", newAssignment);
+$("#assignList").addEventListener("click", e=>{ const b = e.target.closest("[data-assign]"); if (!b) return; G.cur = b.dataset.assign; G.msg = null; G.confirm = null; renderGrade(); });
+gmain.addEventListener("input", e=>{
+  const t = e.target, a = gCur(); if (!a) return;
+  if (t.dataset.ga){ a[t.dataset.ga] = t.value; a.updatedAt = Date.now(); gSave(); if (t.tagName==="TEXTAREA") grow(t); if (t.dataset.ga==="name") renderAssignList(); if (t.dataset.ga==="subject" || t.dataset.ga==="grade") renderGrade(); return; }
+  if (t.dataset.stu){ const st = a.students.find(s=>s.id===t.dataset.stu); if (st){ st.name = t.value; gSave(); } return; }
+  if (t.dataset.fb){ const st = a.students.find(s=>s.id===t.dataset.fb); if (st && st.result){ st.result.feedback = t.value; gSave(); grow(t); } return; }
+});
+gmain.addEventListener("change", e=>{
+  const t = e.target, a = gCur(); if (!a) return;
+  if (t.dataset.rule){ a.rules[t.dataset.rule] = t.checked; gSave(); return; }
+  if (t.name === "g-split"){ G.split = t.value; return; }
+  if (t.dataset.filefor){ const fl = [...t.files]; t.value = ""; addFiles(fl, t.dataset.filefor); }
+});
+gmain.addEventListener("dragover", e=>{ const d = e.target.closest("[data-dropfor]"); if (d){ e.preventDefault(); d.classList.add("over"); } });
+gmain.addEventListener("dragleave", e=>{ const d = e.target.closest("[data-dropfor]"); if (d) d.classList.remove("over"); });
+gmain.addEventListener("drop", e=>{ const d = e.target.closest("[data-dropfor]"); if (!d) return; e.preventDefault(); d.classList.remove("over"); addFiles([...e.dataTransfer.files], d.dataset.dropfor); });
+gmain.addEventListener("click", e=>{
+  const a = gCur();
+  const act = e.target.closest("[data-gact]")?.dataset.gact;
+  if (act === "new") return newAssignment();
+  if (!a) return;
+  if (act === "run") return runGrading(false);
+  if (act === "regrade-all") return runGrading(true);
+  if (act === "stop"){ G.stop = true; return; }
+  if (act === "csv") return exportCSV();
+  if (act === "del"){ G.confirm = "assign"; return renderGrade(); }
+  if (act === "cancel"){ G.confirm = null; return renderGrade(); }
+  if (act === "del-yes"){ a.students.forEach(s=>G.stuFiles.delete(s.id)); G.keyFiles.delete(G.cur); G.list.delete(G.cur); G.cur = gSorted()[0]?.[0] || null; G.confirm = null; gSave(true); return renderGrade(); }
+  const rf = e.target.closest("[data-rmfile]");
+  if (rf){ e.preventDefault(); const owner = rf.dataset.rmfile, i = +rf.dataset.i; const m = owner === "key" ? G.keyFiles : G.stuFiles, k = owner === "key" ? G.cur : owner; const arr = [...(m.get(k)||[])]; arr.splice(i,1); m.set(k, arr); return renderGrade(); }
+  const rs = e.target.closest("[data-rmstu]");
+  if (rs){ a.students = a.students.filter(s=>s.id!==rs.dataset.rmstu); G.stuFiles.delete(rs.dataset.rmstu); gSave(); return renderGrade(); }
+  const mk = e.target.closest("[data-mark]");
+  if (mk){
+    const st = a.students.find(s=>s.id===mk.dataset.mark), q = st.result.questions[+mk.dataset.i];
+    const next = {correct:"incorrect", incorrect:"partial", partial:"correct", unclear:"correct"}[q.result] || "correct";
+    q.result = next; const pp = +q.points_possible || 1;
+    q.points_earned = next === "correct" ? pp : next === "partial" ? Math.round(pp/2*100)/100 : 0;
+    q.note = (q.note && !/\(changed by teacher\)$/.test(q.note) ? q.note + " " : q.note.replace(/\s*\(changed by teacher\)$/,"") + (q.note?" ":"")) + "(changed by teacher)";
+    gSave(); const y = window.scrollY; renderGrade(); window.scrollTo(0, y); return;
+  }
+  const rg = e.target.closest("[data-regrade]");
+  if (rg){ const st = a.students.find(s=>s.id===rg.dataset.regrade); if (st){ const keep = st.result; runGrading(false, st.id).then(()=>{ if (!st.result) st.result = keep; renderGrade(); }); } return; }
+  const cf = e.target.closest("[data-copyfb]");
+  if (cf){ const ta = $("#fb-" + cf.dataset.copyfb); const done = ()=>{ cf.innerHTML = icon("copy") + " Copied"; setTimeout(()=>cf.innerHTML = icon("copy") + " Copy feedback", 1500); };
+    navigator.clipboard?.writeText(ta.value).then(done, ()=>{ ta.select(); }) ?? ta.select(); }
+});
+
+/* ---------- settings ---------- */
+const sView = $("#settingsView");
+function renderSettings(){
+  sView.innerHTML = `<div class="set-wrap">
+  <section class="card">
+    <h2>How to grade</h2>
+    <div class="radio-row" style="flex-direction:column;gap:10px">
+      <label><input type="radio" name="s-engine" value="free" ${engine()==="free"?"checked":""}> <span><b>Free text reader</b>: runs in your browser, no key, no cost, and photos never leave your computer. Best for typed or neatly printed answers; weak on messy handwriting; no partial credit.</span></label>
+      <label><input type="radio" name="s-engine" value="claude" ${engine()==="claude"?"checked":""} ${SETTINGS.apiKey?"":"disabled"}> <span><b>Claude</b>: reads handwriting, gives partial credit and written feedback. Needs an API key below and costs a little per paper.${SETTINGS.apiKey?"":" (Save a key first.)"}</span></label>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Claude API key <span class="opt" style="font-family:var(--body);font-size:13px;font-weight:500;color:var(--muted)">optional</span></h2>
+    <p class="card-sub">Only needed for Claude grading and "Draft with Claude". It uses your own key from Anthropic. It's saved only in this browser and sent only to Anthropic's API. You pay Anthropic for what you use, usually a few cents per paper or less.</p>
+    <div class="field"><label for="s-key">API key</label>
+      <div class="keyrow"><input id="s-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-..." value="${esc(SETTINGS.apiKey)}">
+      <button class="btn" type="button" data-sact="show">Show</button>
+      <button class="btn primary" type="button" data-sact="savekey">Save key</button></div></div>
+    <div class="field"><label for="s-model">Model</label><select id="s-model" data-set="model">${MODELS.map(m=>`<option value="${m.id}"${SETTINGS.model===m.id?" selected":""}>${esc(m.name)}</option>`).join("")}</select></div>
+    <div class="actions">
+      <button class="btn" type="button" data-sact="test" ${SETTINGS.apiKey?"":"disabled"}>Test key</button>
+      ${SETTINGS.apiKey?`<button class="btn ghost danger" type="button" data-sact="clear">Remove key</button>`:""}
+    </div>
+    ${S.setMsg?`<div class="note${S.setMsg.err?" err":""}">${esc(S.setMsg.text)}</div>`:""}
+    <div class="note">Don't have a key? Sign in at <b>console.anthropic.com</b>, add a few dollars of credit under Billing, then create a key under API Keys. Don't use this key on a shared computer.</div>
+  </section>
+  <section class="card">
+    <h2>Defaults for new plans</h2>
+    <div class="grid2">
+      <div class="field"><label for="s-school">School</label><input id="s-school" type="text" data-set="school" value="${esc(SETTINGS.school)}"></div>
+      <div class="field"><label for="s-teacher">Teacher</label><input id="s-teacher" type="text" data-set="teacher" value="${esc(SETTINGS.teacher)}"></div>
+      <div class="field"><label for="s-grade">Grade</label><select id="s-grade" data-set="grade">${GRADES.map(g=>`<option value="${g}"${SETTINGS.grade===g?" selected":""}>${gradeName(g)}</option>`).join("")}</select></div>
+    </div>
+  </section></div>`;
+}
+sView.addEventListener("change", e=>{ if (e.target.name === "s-engine"){ SETTINGS.engine = e.target.value; saveSettings(); S.setMsg = {text: e.target.value === "free" ? "Using the free text reader." : "Using Claude for grading."}; renderSettings(); } });
+sView.addEventListener("input", e=>{ const t = e.target; if (t.dataset.set){ SETTINGS[t.dataset.set] = t.value; saveSettings(); } });
+sView.addEventListener("click", async e=>{
+  const act = e.target.closest("[data-sact]")?.dataset.sact; if (!act) return;
+  const inp = $("#s-key");
+  if (act === "show"){ inp.type = inp.type === "password" ? "text" : "password"; e.target.textContent = inp.type === "password" ? "Show" : "Hide"; return; }
+  if (act === "savekey"){ SETTINGS.apiKey = inp.value.trim(); if (SETTINGS.apiKey && !SETTINGS.engine) SETTINGS.engine = "claude"; S.setMsg = saveSettings() ? {text: SETTINGS.apiKey ? "Key saved in this browser." : "Key removed."} : {text:"Couldn't save in this browser.", err:true}; renderSettings(); return; }
+  if (act === "clear"){ SETTINGS.apiKey = ""; saveSettings(); S.setMsg = {text:"Key removed from this browser."}; renderSettings(); return; }
+  if (act === "test"){
+    S.setMsg = {text:"Testing…"}; renderSettings();
+    try { await callClaude([{type:"text", text:"Reply with the single word: ready"}], 10); S.setMsg = {text:"Your key works. You're ready to grade."}; }
+    catch(err){ S.setMsg = {text: err.message || "The test failed.", err:true}; }
+    renderSettings();
+  }
+});
+
+/* ---------- navigation ---------- */
+function showView(v){
+  if (!["plans","grade","settings"].includes(v)) v = "plans";
+  $("#plansView").hidden = v !== "plans"; $("#gradeView").hidden = v !== "grade"; sView.hidden = v !== "settings";
+  document.querySelectorAll(".topnav [data-nav]").forEach(b=>b.setAttribute("aria-current", b.dataset.nav === v ? "page" : "false"));
+  if (v === "plans") renderMain(); else if (v === "grade") renderGrade(); else { S.setMsg = null; renderSettings(); }
+  try { history.replaceState(null, "", v === "plans" ? location.pathname + location.search : "#" + v); } catch(e){}
+}
+document.addEventListener("click", e=>{ const n = e.target.closest("[data-nav]"); if (n && n.tagName === "BUTTON" && !n.closest(".view-toggle")){ showView(n.dataset.nav); window.scrollTo(0,0); } });
+gLoad(); G.cur = gSorted()[0]?.[0] || null;
 
 /* ---------- boot ---------- */
 let unsub = null;
@@ -831,6 +1465,7 @@ if (window.claude && typeof window.claude.use === "function"){
   S.downloads = browserDownloads;
   startLocal();
 }
+if (/^#(grade|settings)$/.test(location.hash)) showView(location.hash.slice(1));
 })();
 </script>
 
