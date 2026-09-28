@@ -15,6 +15,17 @@ Live site: https://bebopoutlawstar-cloud.github.io/lesson-planner/
 - **Copy to next week** duplicates a plan and moves every date forward 7 days
 - **Draft empty fields with Claude** (needs an API key) fills in a day from its lesson and unit
 
+## Practice
+
+Make **test prep**, **additional practice**, **independent work** and **early finisher** sheets, each with an answer key.
+
+- **Free math generator:** 19 skills from addition to one-step equations (whole numbers, decimals, fractions, rounding, order of operations, powers of 10, area, volume, integers, percents, word problems), at three levels. Each problem can be swapped for a new one or removed.
+- **Claude (optional, any subject):** give a topic and standard and Claude writes the sheet, including a short reading passage for ELA. Check its key before printing.
+- Test prep is multiple choice. Additional practice starts with a worked example. Early finisher sheets are one level harder and end with a "create your own" challenge.
+- **Reteach from your data:** pick a standard students haven't met and the sheet is set up for it, with the reteach group listed.
+- **PDF with key** downloads the student pages plus an answer key page. An optional **answer box** at the bottom helps the free grader read answers.
+- **Send key to Grade work** creates a grading assignment with the key and standards already filled in.
+
 ## Grade work
 
 1. Type the answer key, or upload photos or a PDF of it. Add point values like `(2 pts)`.

@@ -172,7 +172,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--t-mid);box-shadow:0 0
 
 /* top nav */
 .topnav{display:flex;gap:2px;background:var(--surface-2);border-radius:11px;padding:3px;margin-left:auto}
-.topnav button{border:0;background:none;border-radius:8px;padding:7px 14px;font-weight:600;font-size:14px;cursor:pointer;color:var(--ink-2)}
+.topnav button{border:0;background:none;border-radius:8px;padding:7px 14px;white-space:nowrap;font-weight:600;font-size:14px;cursor:pointer;color:var(--ink-2)}
 .topnav button[aria-current="page"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
 
 /* grading */
@@ -263,7 +263,34 @@ input[type=password]{width:100%;border:1px solid var(--line);background:var(--bg
 :root[data-theme="dark"] .pill.done,:root[data-theme="dark"] .qmark.correct{background:#173D1D;color:#8FD69A}
 :root[data-theme="dark"] .pill.fail,:root[data-theme="dark"] .qmark.incorrect,:root[data-theme="dark"] .missed span{background:#4A1C1C;color:#F4A3A3}
 :root[data-theme="dark"] .pill.run,:root[data-theme="dark"] .qmark.partial{background:#45360F;color:#F2CD73}
-@media (max-width:700px){.stu{grid-template-columns:1fr auto}.stu .thumbs{grid-column:1/-1;order:3}.topnav{margin-left:0;width:100%}.topnav button{flex:1}}
+@media (max-width:700px){.stu{grid-template-columns:1fr auto}.stu .thumbs{grid-column:1/-1;order:3}.topnav{margin-left:0;width:100%;overflow-x:auto}.topnav button{flex:1;padding:7px 8px;font-size:13px}}
+
+/* practice worksheet preview */
+.ws-paper{padding:0;background:var(--paper)}
+.ws-page{padding:22px 26px;display:flex;flex-direction:column;gap:8px}
+.ws-page + .ws-page{border-top:2px dashed var(--line)}
+.ws-top{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--ink-2);flex-wrap:wrap}
+.ws-title{font-size:21px;color:var(--t-ink);border-top:4px solid var(--t-dark);padding-top:10px}
+.ws-meta{font-size:12px;color:var(--muted)}
+.ws-dir{font-style:italic;margin:4px 0}
+.ws-passage{border:1px solid var(--t-border);border-radius:8px;padding:10px 12px;white-space:pre-wrap}
+.ws-example{background:var(--t-wash);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.ws-example > b{color:var(--t-ink)}
+.ws-steps{white-space:pre-wrap;font-size:13px;color:var(--ink-2)}
+.ws-list{margin:0;padding-left:26px;display:flex;flex-direction:column;gap:12px}
+.ws-list li::marker{font-weight:700;color:var(--t-ink)}
+.ws-q{display:flex;gap:10px;align-items:baseline;justify-content:space-between}
+.ws-q > span:first-child{flex:1}
+.ws-blank{color:var(--muted);letter-spacing:.05em}
+.ws-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px;margin-top:4px}
+.ws-blank-line{font-size:12.5px;color:var(--muted)}
+.ws-tools{display:inline-flex;gap:4px;opacity:.35;transition:opacity .15s}
+.ws-list li:hover .ws-tools,.ws-tools:focus-within{opacity:1}
+.ws-mini{width:24px;height:24px;border-radius:6px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:13px;line-height:1;padding:0}
+.ws-mini:disabled{opacity:.4;cursor:default}
+.ws-box{border:2px solid var(--t-dark);border-radius:8px;padding:10px 12px}
+.ws-box-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:8px;font-variant-numeric:tabular-nums}
+.ws-key .ws-list li{font-size:14px}
 
 @media (max-width:1100px){
   .view-toggle{display:inline-flex}
@@ -300,6 +327,7 @@ input[type=password]{width:100%;border:1px solid var(--line);background:var(--bg
     </div>
     <nav class="topnav" aria-label="Sections">
       <button type="button" data-nav="plans" aria-current="page">Plans</button>
+      <button type="button" data-nav="practice">Practice</button>
       <button type="button" data-nav="grade">Grade work</button>
       <button type="button" data-nav="data">Data</button>
       <button type="button" data-nav="settings">Settings</button>
@@ -329,6 +357,18 @@ input[type=password]{width:100%;border:1px solid var(--line);background:var(--bg
       <ul class="plan-list" id="assignList"></ul>
     </aside>
     <main id="gmain"></main>
+  </div>
+
+  <div class="layout" id="practiceView" hidden>
+    <aside class="side">
+      <button class="btn primary" id="newWorksheet" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        New worksheet
+      </button>
+      <div class="side-label">Worksheets</div>
+      <ul class="plan-list" id="practiceList"></ul>
+    </aside>
+    <main id="practiceMain"></main>
   </div>
 
   <main id="dataView" hidden></main>
@@ -761,7 +801,7 @@ async function buildXlsx(p){
 }
 
 /* ---------- PDF (one page-flow per day, like build_pdf.py) ---------- */
-function pdfText(s){ return String(s||"").replace(/→/g,"->").replace(/←/g,"<-").replace(/[≤]/g,"<=").replace(/[≥]/g,">=").replace(/[≈]/g,"~").replace(/[^\x00-\xFF–—‘’“”•…]/g,""); }
+function pdfText(s){ return String(s||"").replace(/\u2212/g,"-").replace(/→/g,"->").replace(/←/g,"<-").replace(/[≤]/g,"<=").replace(/[≥]/g,">=").replace(/[≈]/g,"~").replace(/[^\x00-\xFF–—‘’“”•…]/g,""); }
 function hexRGB(h){ return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; }
 function buildPdf(p){
   const { jsPDF } = window.jspdf;
@@ -1234,8 +1274,30 @@ function parseKey(text){
   return map;
 }
 function parseStudent(lines){
+  // Later matches win (an answer box at the bottom beats the printed question line).
   const map = new Map();
-  lines.forEach(l=>{ const m = l.text.match(Q_RE); if (m && !map.has(m[1])) map.set(m[1], {answer:m[2].trim(), conf:l.conf}); });
+  const segs = [];
+  lines.forEach(l=>{
+    // Split rows like "1) B   2) A   3) C" from an answer box into separate answers.
+    const parts = l.text.split(/\s+(?=\d{1,3}\s*\)\s*\S)/);
+    parts.forEach(t=>segs.push({text:t, conf:l.conf}));
+  });
+  let lastQ = null;
+  segs.forEach(l=>{
+    const t = l.text.replace(/^[^\w(]+/, "");
+    // "Answer: B" on its own line belongs to the question above it.
+    const al = t.match(/^answer\s*:?\s*(.+)$/i);
+    if (al && lastQ){ const v = al[1].replace(/_{2,}/g, "").trim(); if (v) map.set(lastQ, {answer:v, conf:l.conf}); return; }
+    // The reader sometimes drops the ")" in short answer-box entries like "1B".
+    const mc = t.match(/^(\d{1,3})\s*([A-Da-d])$/);
+    const m = mc ? [t, mc[1], mc[2]] : t.match(Q_RE); if (!m) return;
+    lastQ = m[1];
+    let ans = m[2].trim();
+    if (/answer\s*:/i.test(ans)) ans = ans.split(/answer\s*:/i).pop();
+    else if (ans.includes("=")) ans = ans.split("=").pop();
+    ans = ans.replace(/_{2,}/g, "").trim();
+    if (ans || !map.has(m[1])) map.set(m[1], {answer:ans, conf:l.conf});
+  });
   return map;
 }
 const norm = s => String(s).toLowerCase().replace(/[“”"'`]/g,"").replace(/\s+/g," ").replace(/[.,;:!?]+$/,"").trim();
@@ -1587,12 +1649,405 @@ dView.addEventListener("click", e=>{
   }
 });
 
+/* ---------- Practice maker ---------- */
+const P_KEY = "lp-practice-v1";
+const P_TYPES = {
+  testprep:{name:"Test prep", dir:"Read each question. Write the letter of the best answer on the line."},
+  practice:{name:"Additional practice", dir:"Look at the example. Then solve each problem. Show your work."},
+  independent:{name:"Independent work", dir:"Solve each problem on your own. Show your work and write your answer on the line."},
+  finisher:{name:"Early finisher", dir:"Finished early? Try these challenge problems. Show your thinking!"}
+};
+const DIFFS = ["Below grade level", "On grade level", "Above grade level"];
+const P = { list:new Map(), cur:null, busy:false, msg:null, confirm:null };
+const pView = document.getElementById("practiceMain");
+
+/* --- math helpers --- */
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a || 1; };
+function fracStr(n, d, mixed){
+  if (d < 0){ n = -n; d = -d; }
+  const g = gcd(n, d); n /= g; d /= g;
+  if (d === 1) return String(n);
+  if (mixed && Math.abs(n) > d){ const w = Math.trunc(n / d), r = Math.abs(n % d); return `${w} ${r}/${d}`; }
+  return `${n}/${d}`;
+}
+const fmtNum = x => String(+(+x).toFixed(6));
+const withCommas = n => Number(n).toLocaleString("en-US");
+const NAMES = ["Maya","Liam","Sofia","Noah","Aiden","Zoe","Mateo","Ava","Elijah","Isabella","Kai","Leilani","Omar","Priya","Diego","Hana","Jalen","Camila"];
+const gnum = g => g === "K" ? 0 : +g;
+function digitsFor(grade, d){ const base = [1,1,2,3,4,4,5,5,5,5,5,5,5][gnum(grade)] || 4; return Math.max(1, Math.min(6, base + d - 1)); }
+const nDigits = k => k <= 1 ? ri(1, 9) : ri(10 ** (k - 1), 10 ** k - 1);
+
+/* Each generator: gen(d, grade) -> {q, a, wrong?:[...]}. std: suggested standard by grade. */
+const PGENS = [
+  {id:"add", name:"Addition (whole numbers)", std:{"K":"K.OA.A.5","1":"1.OA.C.6","2":"2.NBT.B.5","3":"3.NBT.A.2","4":"4.NBT.B.4"},
+    gen:(d, g)=>{ const k = digitsFor(g, d), a = nDigits(k), b = nDigits(Math.max(1, k - (d === 0 ? 1 : 0))); return {q:`${withCommas(a)} + ${withCommas(b)} =`, a:String(a + b), wrong:[a + b + 10, a + b - 1, Math.abs(a - b)]}; }},
+  {id:"sub", name:"Subtraction (whole numbers)", std:{"K":"K.OA.A.5","1":"1.OA.C.6","2":"2.NBT.B.5","3":"3.NBT.A.2","4":"4.NBT.B.4"},
+    gen:(d, g)=>{ const k = digitsFor(g, d); let a = nDigits(k), b = nDigits(k); if (b > a) [a, b] = [b, a]; if (a === b) a += ri(1, 9); return {q:`${withCommas(a)} − ${withCommas(b)} =`, a:String(a - b), wrong:[a - b + 10, a + b, a - b - 1]}; }},
+  {id:"mfacts", name:"Multiplication facts", std:{"3":"3.OA.C.7","4":"3.OA.C.7"},
+    gen:(d)=>{ const a = ri(2, [5, 9, 12][d]), b = ri(1, [10, 10, 12][d]); return {q:`${a} × ${b} =`, a:String(a * b), wrong:[a * b + a, a * b - b, a + b]}; }},
+  {id:"mmulti", name:"Multi-digit multiplication", std:{"4":"4.NBT.B.5","5":"5.NBT.B.5","6":"6.NS.B.3"},
+    gen:(d, g)=>{ const sizes = gnum(g) <= 4 ? [[2,1],[3,1],[2,2]] : [[2,2],[3,2],[4,2]]; const [x, y] = sizes[d]; const a = nDigits(x), b = nDigits(y); return {q:`${withCommas(a)} × ${b} =`, a:String(a * b), wrong:[a * b + a, a * b - 10 * b, a * (b % 10)]}; }},
+  {id:"div", name:"Division (with remainders)", std:{"3":"3.OA.C.7","4":"4.NBT.B.6","5":"5.NBT.B.6","6":"6.NS.B.2"},
+    gen:(d)=>{ const dv = d === 2 ? ri(11, 35) : ri(2, 9), q = d === 0 ? ri(11, 99) : ri(21, 499), r = d === 0 ? 0 : ri(0, dv - 1), n = dv * q + r;
+      return {q:`${withCommas(n)} ÷ ${dv} =`, a: r ? `${q} R${r}` : String(q), wrong:[r ? `${q + 1} R${r}` : q + 1, r ? `${q} R${r + 1 < dv ? r + 1 : 0}` : q - 1, r ? `${q - 1} R${r}` : q * 10]}; }},
+  {id:"decas", name:"Add and subtract decimals", std:{"4":"4.NF.C.5","5":"5.NBT.B.7","6":"6.NS.B.3"},
+    gen:(d)=>{ const pl = d === 0 ? 1 : 2, mx = [10, 100, 1000][d]; let a = +(Math.random() * mx).toFixed(pl), b = +(Math.random() * mx / (d === 2 ? 1 : 2)).toFixed(d === 2 ? 1 : pl);
+      const add = Math.random() < .5; if (!add && b > a) [a, b] = [b, a];
+      const ans = add ? a + b : a - b; return {q:`${a} ${add ? "+" : "−"} ${b} =`, a:fmtNum(ans), wrong:[fmtNum(ans + 0.1), fmtNum(ans * 10), fmtNum(add ? a - b : a + b)]}; }},
+  {id:"decmul", name:"Multiply decimals", std:{"5":"5.NBT.B.7","6":"6.NS.B.3"},
+    gen:(d)=>{ const a = +(ri(11, [99, 999, 999][d]) / 10).toFixed(1), b = d === 0 ? ri(2, 9) : d === 1 ? +(ri(2, 9) / 10).toFixed(1) : +(ri(11, 99) / 10).toFixed(1);
+      const ans = a * b; return {q:`${a} × ${b} =`, a:fmtNum(ans), wrong:[fmtNum(ans * 10), fmtNum(ans / 10), fmtNum(a + b)]}; }},
+  {id:"round", name:"Rounding", std:{"3":"3.NBT.A.1","4":"4.NBT.A.3","5":"5.NBT.A.4"},
+    gen:(d, g)=>{
+      if (gnum(g) >= 5 && d > 0){ const n = (ri(100, 99999) * 10 + ri(1, 9)) / 1000, place = pick([["tenth",1],["hundredth",2]]); const ans = (Math.round(n * 10 ** place[1]) / 10 ** place[1]).toFixed(place[1]);
+        return {q:`Round ${n} to the nearest ${place[0]}.`, a:String(+ans), wrong:[String(+(+ans + 1 / 10 ** place[1]).toFixed(place[1])), String(Math.round(n)), String(+(Math.floor(n * 10 ** place[1]) / 10 ** place[1]).toFixed(place[1]) === +ans ? +(+ans - 1 / 10 ** place[1]).toFixed(place[1]) : +(Math.floor(n * 10 ** place[1]) / 10 ** place[1]).toFixed(place[1]))]}; }
+      const place = pick(d === 0 ? [10, 100] : [10, 100, 1000]), n = ri(place + 1, place * 100 - 1), ans = Math.round(n / place) * place;
+      return {q:`Round ${withCommas(n)} to the nearest ${withCommas(place)}.`, a:String(ans), wrong:[ans + place, ans - place, Math.floor(n / place) * place === ans ? ans + place : Math.floor(n / place) * place]}; }},
+  {id:"cmpdec", name:"Compare decimals (<, >, =)", std:{"4":"4.NF.C.7","5":"5.NBT.A.3"},
+    gen:(d)=>{ let a = +(Math.random() * 10).toFixed(ri(1, d + 1)), b; const r = Math.random();
+      if (r < .2) b = a; else if (r < .6) b = +(a + (Math.random() < .5 ? -1 : 1) * [0.1, 0.01, 0.001][d]).toFixed(3); else b = +(Math.random() * 10).toFixed(ri(1, 3));
+      const bs = r < .2 && d > 0 ? a.toFixed(String(a).split(".")[1]?.length + 1 || 2) : String(b);
+      return {q:`${a} ___ ${bs}`, a: a > b ? ">" : a < b ? "<" : "=", choices:["<",">","="]}; }},
+  {id:"fracas", name:"Add and subtract fractions", std:{"3":"3.NF.A.3","4":"4.NF.B.3","5":"5.NF.A.1"},
+    gen:(d, g)=>{ const mixed = gnum(g) >= 4;
+      if (d === 0){ const den = pick([4,5,6,8,10,12]), a = ri(1, den - 1), b = ri(1, den - 1), add = Math.random() < .5 || a <= b; const [x, y] = add ? [a, b] : [Math.max(a,b), Math.min(a,b)];
+        return {q:`${x}/${den} ${add ? "+" : "−"} ${y}/${den} =`, a:fracStr(add ? x + y : x - y, den, mixed), wrong:[`${add ? x + y : x - y}/${den * 2}`, fracStr((add ? x + y : x - y) + 1, den, mixed), `${x + y}/${den}`]}; }
+      const d1 = pick([2,3,4,5,6]), d2 = pick([3,4,6,8,10,12].filter(v=>v !== d1)), a = ri(1, d1 - 1), b = ri(1, d2 - 1);
+      const w1 = d === 2 ? ri(1, 4) : 0, w2 = d === 2 ? ri(0, w1) : 0;
+      const n1 = w1 * d1 + a, n2 = w2 * d2 + b, add = Math.random() < .5 || n1 * d2 <= n2 * d1;
+      const num = add ? n1 * d2 + n2 * d1 : n1 * d2 - n2 * d1, den = d1 * d2;
+      const f1 = w1 ? `${w1} ${a}/${d1}` : `${a}/${d1}`, f2 = w2 ? `${w2} ${b}/${d2}` : `${b}/${d2}`;
+      return {q:`${f1} ${add ? "+" : "−"} ${f2} =`, a:fracStr(num, den, mixed), wrong:[`${add ? a + b : Math.abs(a - b)}/${d1 + d2}`, fracStr(num + d1, den, mixed), fracStr(num, den * 2, mixed)]}; }},
+  {id:"fracmul", name:"Multiply fractions", std:{"4":"4.NF.B.4","5":"5.NF.B.4","6":"6.NS.A.1"},
+    gen:(d)=>{ const a = ri(1, 7), b = pick([2,3,4,5,6,8].filter(v=>v > a) .concat([8])), c = ri(1, 7), e = pick([2,3,4,5,6,8,9]);
+      if (d === 0){ const w = ri(2, 12); return {q:`${a}/${b} × ${w} =`, a:fracStr(a * w, b, true), wrong:[`${a * w}/${b * w}`, fracStr(a + w, b, true), fracStr(a * w + 1, b, true)]}; }
+      if (d === 1) return {q:`${a}/${b} × ${c}/${e} =`, a:fracStr(a * c, b * e, true), wrong:[`${a + c}/${b + e}`, fracStr(a * e, b * c, true), fracStr(a * c + 1, b * e, true)]};
+      const w = ri(1, 4); return {q:`${w} ${a}/${b} × ${c}/${e} =`, a:fracStr((w * b + a) * c, b * e, true), wrong:[fracStr(w * c * b + a * c, b * e * 2, true), `${w} ${a * c}/${b * e}`, fracStr((w * b + a) * c + b, b * e, true)]}; }},
+  {id:"oops", name:"Order of operations", std:{"5":"5.OA.A.1","6":"6.EE.A.2","7":"7.EE.B.3"},
+    gen:(d, g)=>{ const a = ri(2, 12), b = ri(2, 9), c = ri(2, 9), e = ri(1, 9);
+      const forms = [
+        [`${a} + ${b} × ${c}`, a + b * c, [(a + b) * c]],
+        [`(${a} + ${b}) × ${c}`, (a + b) * c, [a + b * c]],
+        [`${a * c} ÷ ${c} + ${b} × ${e}`, a + b * e, [(a + b) * e]],
+        [`[${a} + (${b} × ${c})] − ${e}`, a + b * c - e, [(a + b) * c - e]],
+        [`${b} × (${c} + ${e}) − ${a}`, b * (c + e) - a, [b * c + e - a]]
+      ];
+      if (gnum(g) >= 6) forms.push([`${b}² + ${a} × (${c} − 1)`, b * b + a * (c - 1), [(b * b + a) * (c - 1)]]);
+      const f = pick(d === 0 ? forms.slice(0, 2) : d === 1 ? forms.slice(1, 5) : forms.slice(2));
+      return {q:`${f[0]} =`, a:String(f[1]), wrong:[f[2][0], f[1] + 1, f[1] - b]}; }},
+  {id:"pow10", name:"Multiply and divide by powers of 10", std:{"5":"5.NBT.A.2"},
+    gen:(d)=>{ const n = +(Math.random() * [10, 100, 1000][d]).toFixed(ri(1, 3)), p = ri(1, 3), mul = Math.random() < .5, exp = d > 0;
+      const factor = exp ? `10${["","¹","²","³"][p]}` : withCommas(10 ** p), ans = mul ? n * 10 ** p : n / 10 ** p;
+      return {q:`${n} ${mul ? "×" : "÷"} ${factor} =`, a:fmtNum(ans), wrong:[fmtNum(mul ? n / 10 ** p : n * 10 ** p), fmtNum(mul ? n * 10 ** (p - 1) : n / 10 ** (p + 1)), fmtNum(ans * 10)]}; }},
+  {id:"word", name:"Word problems", std:{"1":"1.OA.A.1","2":"2.OA.A.1","3":"3.OA.A.3","4":"4.OA.A.3","5":"5.NBT.B.5"},
+    gen:(d, g)=>{ const n = pick(NAMES), m = pick(NAMES.filter(x=>x !== n)), big = gnum(g) >= 4;
+      const it = pick([["stickers","sticker"],["baseball cards","card"],["marbles","marble"],["books","book"],["seashells","seashell"]]);
+      if (d === 0){ const a = ri(big ? 120 : 8, big ? 900 : 40), b = ri(big ? 50 : 3, big ? 400 : 20);
+        return Math.random() < .5 ? {q:`${n} has ${a} ${it[0]}. ${m} gives ${n} ${b} more. How many ${it[0]} does ${n} have now?`, a:String(a + b), wrong:[a - b, a + b + 10, a * 2]}
+          : {q:`${n} had ${a + b} ${it[0]} and gave ${b} to ${m}. How many ${it[0]} does ${n} have left?`, a:String(a), wrong:[a + 2 * b, a - 10, b]}; }
+      if (d === 1){ const boxes = ri(big ? 12 : 3, big ? 48 : 9), per = ri(big ? 12 : 2, big ? 36 : 10);
+        return {q:`A class orders ${boxes} boxes of pencils. Each box has ${per} pencils. How many pencils are there in all?`, a:String(boxes * per), wrong:[boxes + per, boxes * per + per, boxes * (per - 1)]}; }
+      const cost = ri(3, 9), qty = ri(4, 12), paid = Math.ceil(cost * qty / 10) * 10 + pick([0, 10, 20]);
+      return {q:`${n} buys ${qty} notebooks that cost $${cost} each and pays with $${paid}. How much change does ${n} get?`, a:String(paid - cost * qty), wrong:[cost * qty, paid - cost, paid - cost * qty + cost]}; }},
+  {id:"areaper", name:"Area and perimeter of rectangles", std:{"3":"3.MD.C.7","4":"4.MD.A.3","6":"6.G.A.1"},
+    gen:(d)=>{ const l = ri(3, [10, 20, 40][d]), w = ri(2, l), unit = pick(["cm","m","in.","ft"]), area = Math.random() < .5;
+      if (d === 2 && Math.random() < .5) return {q:`A rectangle has an area of ${l * w} square ${unit} and a length of ${l} ${unit}. What is its width in ${unit}?`, a:String(w), wrong:[l * w - l, w + 1, 2 * (l + w)]};
+      return area ? {q:`What is the area of a rectangle that is ${l} ${unit} long and ${w} ${unit} wide? (square ${unit})`, a:String(l * w), wrong:[2 * (l + w), l + w, l * w + l]}
+        : {q:`What is the perimeter of a rectangle that is ${l} ${unit} long and ${w} ${unit} wide? (${unit})`, a:String(2 * (l + w)), wrong:[l * w, l + w, 2 * l + w]}; }},
+  {id:"volume", name:"Volume of rectangular prisms", std:{"5":"5.MD.C.5","6":"6.G.A.2"},
+    gen:(d)=>{ const l = ri(2, [6, 10, 15][d]), w = ri(2, [5, 8, 12][d]), h = ri(2, [5, 8, 10][d]);
+      if (d === 2 && Math.random() < .5) return {q:`A box has a volume of ${l * w * h} cubic cm. It is ${l} cm long and ${w} cm wide. How tall is it in cm?`, a:String(h), wrong:[h + 1, l * w, l + w + h]};
+      return {q:`Find the volume of a rectangular prism ${l} cm long, ${w} cm wide, and ${h} cm tall. (cubic cm)`, a:String(l * w * h), wrong:[l + w + h, 2 * (l * w + w * h + l * h), l * w]}; }},
+  {id:"integers", name:"Add and subtract integers", std:{"6":"6.NS.C.5","7":"7.NS.A.1"},
+    gen:(d)=>{ const r = [10, 20, 50][d], a = ri(-r, r), b = ri(-r, r), add = Math.random() < .5; const bs = b < 0 ? `(${b})` : String(b);
+      const ans = add ? a + b : a - b; return {q:`${a} ${add ? "+" : "−"} ${bs} =`, a:String(ans), wrong:[-ans, add ? a - b : a + b, ans + 2]}; }},
+  {id:"percent", name:"Percent of a number", std:{"6":"6.RP.A.3","7":"7.RP.A.3"},
+    gen:(d)=>{ const p = pick(d === 0 ? [10, 25, 50] : d === 1 ? [5, 10, 20, 25, 40, 75] : [12, 15, 35, 60, 85]), n = pick(d === 0 ? [20, 40, 60, 80, 100, 200] : [40, 60, 80, 120, 160, 240, 300]);
+      const ans = p * n / 100; return {q:`What is ${p}% of ${n}?`, a:fmtNum(ans), wrong:[fmtNum(n - ans), fmtNum(ans * 10), fmtNum(n / p)]}; }},
+  {id:"eq1", name:"One-step equations", std:{"6":"6.EE.B.7","7":"7.EE.B.4"},
+    gen:(d)=>{ const x = ri(d === 2 ? -12 : 1, 15), a = ri(2, 12), t = pick(d === 0 ? ["add","sub"] : ["add","sub","mul","div"]);
+      if (t === "add") return {q:`x + ${a} = ${x + a}`, a:String(x), wrong:[x + 2 * a, x + a, -x]};
+      if (t === "sub") return {q:`x − ${a} = ${x - a}`, a:String(x), wrong:[x - 2 * a, x - a, x + 1]};
+      if (t === "mul") return {q:`${a}x = ${a * x}`, a:String(x), wrong:[a * x * a, a * x - a, x + a]};
+      return {q:`x ÷ ${a} = ${x}`, a:String(a * x), wrong:[x, x + a, Math.round(x / a)]}; }}
+];
+function genFor(id){ return PGENS.find(x=>x.id === id) || PGENS[0]; }
+function makeChoices(item){
+  if (item.choices) return {choices:item.choices, letter:"ABCD"[item.choices.indexOf(item.a)]};
+  const same = w => w === item.a || (isFinite(+w) && isFinite(+item.a) && +w === +item.a);
+  const pool = [...new Set((item.wrong || []).map(String).filter(w=>!same(w) && w !== "NaN"))];
+  const n = parseFloat(item.a);
+  let k = 1; while (pool.length < 3 && isFinite(n)) { const c = fmtNum(n + k * (k % 2 ? 1 : -1) * Math.max(1, Math.round(Math.abs(n) / 10))); if (!same(c) && !pool.includes(c)) pool.push(c); k++; if (k > 20) break; }
+  const opts = [item.a, ...pool.slice(0, 3)].sort(()=>Math.random() - .5);
+  return {choices:opts, letter:"ABCD"[opts.indexOf(item.a)]};
+}
+function freeProblems(ws){
+  const g = genFor(ws.genId), d = +ws.difficulty, std = ws.std || g.std[ws.grade] || "";
+  const count = Math.max(1, Math.min(40, +ws.count || 10)), seen = new Set(), out = [];
+  let guard = 0;
+  while (out.length < count && guard++ < count * 20){
+    const dd = ws.type === "finisher" ? Math.min(2, d + 1) : d;
+    const it = g.gen(dd, ws.grade); if (seen.has(it.q)) continue; seen.add(it.q);
+    const p = {q:it.q, a:it.a, std};
+    if (ws.type === "testprep"){ const mc = makeChoices(it); p.choices = mc.choices; p.a = mc.letter; p.value = it.a; }
+    else if (it.choices) p.q = it.q + "   (write <, >, or =)";
+    out.push(p);
+  }
+  let example = null;
+  if (ws.type === "practice"){ const it = g.gen(Math.max(0, d - 1), ws.grade); example = {q:it.q, steps:"", a:it.a}; }
+  let extension = "";
+  if (ws.type === "finisher") extension = `Create your own: write a ${g.name.toLowerCase()} problem for a classmate, solve it on the back, and trade papers.`;
+  return {problems:out, example, extension, title: ws.title && !ws.autoTitle ? ws.title : `${g.name}: ${P_TYPES[ws.type].name}`, directions: ws.directions || P_TYPES[ws.type].dir, passage:""};
+}
+async function claudeProblems(ws){
+  const t = P_TYPES[ws.type];
+  const prompt = `Write a ${t.name.toLowerCase()} worksheet for ${gradeOrd(ws.grade)} ${THEMES[ws.subject].name}.
+Standard(s): ${ws.std || "(choose the best-fitting standard for this grade and topic)"}
+Topic or skill: ${ws.topic || "(based on the standard)"}
+Difficulty: ${DIFFS[+ws.difficulty]}
+Number of problems: ${ws.count}
+
+Rules for this type:
+- Test prep: every problem is multiple choice with exactly 4 choices, in the style of state tests (Nevada uses SBAC), with one clearly correct answer and distractors based on common mistakes. "a" is the correct letter A-D.
+- Additional practice: include one worked example ("example" with q, short steps, and a), then problems that build from easier to harder.
+- Independent work: problems students can do alone from the directions, mostly skills practice plus 1-2 word problems.
+- Early finisher: engaging challenge problems (puzzles, real-world, multi-step) above the usual level, and put one open-ended "create your own" task in "extension".
+This worksheet is: ${t.name}.
+Every problem needs a short, exact answer that can be checked against a key: a number, word, letter or short phrase. For reading or ELA, write a short original passage (under 250 words) in "passage" and ask questions about it. Keep wording at a ${gradeOrd(ws.grade)} reading level. Tag each problem with its standard code.
+Return ONLY JSON: {"title":"...","directions":"...","passage":"","example":null,"problems":[{"q":"...","choices":[],"a":"...","standard":"..."}],"extension":""}`;
+  const out = await aiJson(prompt);
+  if (!out || !Array.isArray(out.problems) || !out.problems.length) throw {message:"Claude didn't return any problems. Try again."};
+  return {
+    title: String(out.title || `${t.name}`), directions: String(out.directions || t.dir), passage: String(out.passage || ""),
+    example: out.example && out.example.q ? {q:String(out.example.q), steps:String(out.example.steps || ""), a:String(out.example.a || "")} : null,
+    problems: out.problems.map(p=>({q:String(p.q || ""), a:String(p.a || ""), std:String(p.standard || ws.std || ""), choices: Array.isArray(p.choices) && p.choices.length ? p.choices.map(String).slice(0, 4) : undefined})),
+    extension: String(out.extension || "")
+  };
+}
+
+/* --- storage --- */
+function pLoad(){ try { const o = JSON.parse(localStorage.getItem(P_KEY) || "{}"); Object.entries(o).forEach(([k,v])=>P.list.set(k, v)); } catch(e){} }
+function pSave(){ try { const o = {}; P.list.forEach((v,k)=>o[k]=v); localStorage.setItem(P_KEY, JSON.stringify(o)); } catch(e){ P.msg = {text:"Couldn't save in this browser (storage may be full).", err:true}; } }
+function pCur(){ return P.list.get(P.cur) || null; }
+function pSorted(){ return [...P.list.entries()].sort((a,b)=>(b[1].updatedAt||0)-(a[1].updatedAt||0)); }
+function newWorksheet(pre){
+  const id = "w" + uid().slice(1);
+  const ws = Object.assign({title:"", autoTitle:true, type:"practice", grade:SETTINGS.grade, subject:"math", genId:"decas", source: "free", std:"", topic:"", count:10, difficulty:1, answerBox:true, directions:"", problems:[], example:null, extension:"", passage:"", group:"", createdAt:Date.now(), updatedAt:Date.now()}, pre || {});
+  P.list.set(id, ws); P.cur = id; P.msg = null; P.confirm = null; pSave(); renderPractice();
+}
+function reteachList(){
+  const save = {...D}; D.subject = "all"; D.grade = "all"; const md = dataModel(); Object.assign(D, save);
+  return md.stds.map(s=>{
+    let e = 0, p = 0; const ny = [], ap = [];
+    md.students.forEach(row=>{ const cl = row.cells.get(s); if (!cl) return; e += cl.e; p += cl.p; const b = band(pctOf(cl)); if (b === "notyet") ny.push(row.name); if (b === "approach") ap.push(row.name); });
+    return {s, pct: p ? Math.round(e / p * 100) : 0, ny, ap};
+  }).filter(x=>x.ny.length || x.ap.length);
+}
+
+/* --- render --- */
+function renderPracticeList(){
+  const ul = document.getElementById("practiceList"), items = pSorted();
+  if (!items.length){ ul.innerHTML = `<li style="color:var(--muted);font-size:13px;padding:4px 2px">No worksheets yet.</li>`; return; }
+  ul.innerHTML = items.map(([id, w])=>`<li><button type="button" data-ws="${esc(id)}" aria-current="${id===P.cur}"><span class="dot" style="background:#${(THEMES[w.subject]||THEMES.math).dark}"></span><span class="pt">${esc(w.title || "New worksheet")}</span><span class="pm">${esc(P_TYPES[w.type].name)} · ${w.grade==="K"?"K":"Gr "+esc(w.grade)} · ${w.problems.length} problems</span></button></li>`).join("");
+}
+function paperHTML(ws){
+  if (!ws.problems.length) return `<div class="empty-state" style="border:0"><p>Choose your settings and click <b>Make worksheet</b>. The student page and answer key show up here.</p></div>`;
+  const mc = ws.problems.some(p=>p.choices);
+  return `<div class="ws-page">
+    <div class="ws-top"><span>Name ____________________</span><span>Date __________</span></div>
+    <h3 class="ws-title">${esc(ws.title)}</h3>
+    <div class="ws-meta">${esc(P_TYPES[ws.type].name)} · ${esc(gradeName(ws.grade))}${ws.std?` · ${esc(ws.std)}`:""}</div>
+    <p class="ws-dir">${esc(ws.directions)}</p>
+    ${ws.passage ? `<div class="ws-passage">${esc(ws.passage)}</div>` : ""}
+    ${ws.example ? `<div class="ws-example"><b>Example</b><div>${esc(ws.example.q)}</div>${ws.example.steps?`<div class="ws-steps">${esc(ws.example.steps)}</div>`:""}<div>Answer: <b>${esc(ws.example.a)}</b></div></div>` : ""}
+    <ol class="ws-list">${ws.problems.map((p, i)=>`<li><div class="ws-q"><span>${esc(p.q)}</span>${p.choices?"":`<span class="ws-blank">______</span>`}
+      <span class="ws-tools no-print"><button type="button" class="ws-mini" data-pact="reroll" data-i="${i}" title="${ws.source==="free"?"New problem":"Only for free worksheets"}" ${ws.source==="free"?"":"disabled"}>↻</button><button type="button" class="ws-mini" data-pact="rm" data-i="${i}" title="Remove">×</button></span></div>
+      ${p.choices ? `<div class="ws-choices">${p.choices.map((c, j)=>`<span><b>${"ABCD"[j]}.</b> ${esc(c)}</span>`).join("")}</div><div class="ws-blank-line">Answer: ______</div>` : ""}</li>`).join("")}</ol>
+    ${ws.extension ? `<div class="ws-example"><b>Challenge</b><div>${esc(ws.extension)}</div></div>` : ""}
+    ${ws.answerBox ? `<div class="ws-box"><b>Answer box</b> <span class="muted-s">Copy your final answers here.</span><div class="ws-box-grid">${ws.problems.map((p,i)=>`<span>${i+1}) ________</span>`).join("")}</div></div>` : ""}
+  </div>
+  <div class="ws-page ws-key">
+    <h3 class="ws-title">Answer key</h3>
+    <div class="ws-meta">${esc(ws.title)}</div>
+    <ol class="ws-list">${ws.problems.map(p=>`<li><b>${esc(p.a)}</b>${p.value?` <span class="muted-s">(${esc(p.value)})</span>`:""}${p.std?` <span class="kbd">${esc(p.std)}</span>`:""}</li>`).join("")}</ol>
+  </div>`;
+}
+function renderPractice(){
+  renderPracticeList();
+  const ws = pCur();
+  const t = THEMES[ws?.subject || "math"], r = document.documentElement.style;
+  r.setProperty("--t-dark","#"+t.dark); r.setProperty("--t-mid","#"+t.mid); r.setProperty("--t-light","#"+t.light); r.setProperty("--t-border","#"+t.border);
+  const rl = reteachList();
+  if (!ws){
+    pView.innerHTML = `<div class="empty-state"><h2 style="font-size:22px">Make practice in seconds</h2><p>Test prep, additional practice, independent work and early finisher sheets, each with an answer key you can send straight to Grade work. Math is free; Claude can write any subject when your API key is saved.</p><div class="actions" style="justify-content:center"><button class="btn primary" type="button" data-pact="new">New worksheet</button></div>
+      ${rl.length ? `<p style="font-size:13.5px">Or reteach a standard from your data:</p><div class="chips" style="justify-content:center">${rl.map(x=>`<button type="button" class="band ${band(x.pct)}" style="border:0;cursor:pointer" data-reteach="${esc(x.s)}">${esc(x.s)} · ${x.ny.length + x.ap.length} students</button>`).join("")}</div>` : ""}</div>`;
+    return;
+  }
+  const canClaude = !!(S.sample || SETTINGS.apiKey);
+  if (ws.source === "claude" && !canClaude) ws.source = "free";
+  const isFree = ws.source === "free";
+  pView.innerHTML = `
+  <section class="work" style="margin-top:0">
+  <div class="editor">
+    <div class="field"><label for="w-title">Worksheet title <span class="opt">Leave blank for an automatic title</span></label><input id="w-title" type="text" data-pw="title" value="${esc(ws.autoTitle ? "" : ws.title)}" placeholder="${esc(ws.title || "Automatic")}"></div>
+    <div class="field"><span class="lab">Type</span><div class="subjects" role="radiogroup" aria-label="Worksheet type">${Object.entries(P_TYPES).map(([k,v])=>`<button type="button" class="subj" role="radio" aria-checked="${ws.type===k}" data-ptype="${k}">${esc(v.name)}</button>`).join("")}</div></div>
+    <div class="grid2">
+      <div class="field"><label for="w-grade">Grade</label><select id="w-grade" data-pw="grade">${GRADES.map(g=>`<option value="${g}"${ws.grade===g?" selected":""}>${gradeName(g)}</option>`).join("")}</select></div>
+      <div class="field"><label for="w-subject">Subject</label><select id="w-subject" data-pw="subject">${Object.entries(THEMES).map(([k,v])=>`<option value="${k}"${ws.subject===k?" selected":""}>${esc(v.name)}</option>`).join("")}</select></div>
+      <div class="field"><label for="w-diff">Level</label><select id="w-diff" data-pw="difficulty">${DIFFS.map((n,i)=>`<option value="${i}"${+ws.difficulty===i?" selected":""}>${n}</option>`).join("")}</select></div>
+      <div class="field"><label for="w-count">Problems</label><input id="w-count" type="text" inputmode="numeric" data-pw="count" value="${esc(ws.count)}"></div>
+    </div>
+    <div class="field"><span class="lab">Written by</span>
+      <div class="radio-row">
+        <label><input type="radio" name="w-src" value="free" ${isFree?"checked":""}> Free math generator</label>
+        <label><input type="radio" name="w-src" value="claude" ${!isFree?"checked":""} ${canClaude?"":"disabled"}> Claude (any subject)${canClaude?"":' <span class="muted-s">needs an API key in Settings</span>'}</label>
+      </div></div>
+    ${isFree ? `<div class="field"><label for="w-gen">Skill</label><select id="w-gen" data-pw="genId">${PGENS.map(g=>`<option value="${g.id}"${ws.genId===g.id?" selected":""}>${esc(g.name)}${g.std[ws.grade]?` (${g.std[ws.grade]})`:""}</option>`).join("")}</select></div>`
+      : `<div class="field"><label for="w-topic">Topic or skill</label><input id="w-topic" type="text" data-pw="topic" value="${esc(ws.topic)}" placeholder="Main idea and details, comparing decimals, food webs…"></div>`}
+    <div class="field"><label for="w-std">Standard <span class="opt">${isFree ? "Used to tag the answer key" : "Claude writes to this standard"}</span></label><input id="w-std" type="text" data-pw="std" value="${esc(ws.std)}" placeholder="${esc(isFree ? (genFor(ws.genId).std[ws.grade] || "5.NBT.B.7") : "5.RI.KID.2")}"></div>
+    ${rl.length ? `<div class="field"><label for="w-reteach">Reteach from your data <span class="opt">Fills in the standard and names the group</span></label><select id="w-reteach"><option value="">Pick a standard students haven't met…</option>${rl.map(x=>`<option value="${esc(x.s)}"${ws.std===x.s?" selected":""}>${esc(x.s)}: ${x.pct}% · ${x.ny.length} not yet, ${x.ap.length} approaching</option>`).join("")}</select></div>` : ""}
+    ${ws.group ? `<div class="note"><b>For:</b> ${esc(ws.group)}</div>` : ""}
+    <label class="check" style="align-self:flex-start"><input type="checkbox" data-pw="answerBox" ${ws.answerBox?"checked":""}> Add an answer box (helps the free grader)</label>
+    <div class="actions">
+      <button class="btn primary" type="button" data-pact="make" ${P.busy?"disabled":""}>${P.busy?'<span class="spin"></span> Writing…':(ws.problems.length?"Make a new version":"Make worksheet")}</button>
+      ${ws.problems.length ? `<button class="btn" type="button" data-pact="pdf">${icon("pdf")} PDF with key</button><button class="btn" type="button" data-pact="send">Send key to Grade work</button>` : ""}
+    </div>
+    ${P.msg ? `<div class="note${P.msg.err?" err":""}">${esc(P.msg.text)}</div>` : ""}
+    <div class="actions" style="justify-content:flex-end">${P.confirm ? `<span class="confirm">Delete this worksheet?<button class="btn danger-solid" type="button" data-pact="del-yes">Delete</button><button class="btn ghost" type="button" data-pact="cancel">Keep it</button></span>` : `<button class="btn ghost danger" type="button" data-pact="del">Delete worksheet</button>`}</div>
+  </div>
+  <div class="preview-wrap"><div class="paper ws-paper">${paperHTML(ws)}</div></div>
+  </section>`;
+}
+
+/* --- actions --- */
+async function makeWorksheet(){
+  const ws = pCur(); if (!ws || P.busy) return;
+  P.busy = true; P.msg = null; renderPractice();
+  try {
+    const out = ws.source === "claude" ? await claudeProblems(ws) : freeProblems(ws);
+    Object.assign(ws, out, {updatedAt:Date.now()});
+    if (ws.source === "free" && !ws.std) ws.problems.forEach(p=>{ if (!p.std) p.std = genFor(ws.genId).std[ws.grade] || ""; });
+    if (ws.source === "claude") ws.autoTitle = true;
+    if (ws.source === "claude") P.msg = {text:"Check every answer in the key before you print. Claude can make mistakes."};
+    pSave();
+  } catch(e){ P.msg = {text:(e && e.message) || "Couldn't make the worksheet. Try again.", err:true}; }
+  P.busy = false; renderPractice();
+}
+function keyText(ws){ return ws.problems.map((p, i)=>`${i + 1}) ${p.a}${p.std ? ` [${p.std}]` : ""}`).join("\n"); }
+function sendToGrade(){
+  const ws = pCur(); if (!ws || !ws.problems.length) return;
+  const id = "a" + uid().slice(1);
+  G.list.set(id, {name: ws.title, grade: ws.grade, subject: ws.subject, keyText: keyText(ws), defaultStd: ws.std || "", rules:{equivalent:true, partial:true, spelling:false}, students:[], createdAt:Date.now(), updatedAt:Date.now()});
+  G.cur = id; gSave(true);
+  showView("grade");
+}
+function buildWorksheetPdf(ws){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:"pt", format:"letter"});
+  const t = THEMES[ws.subject], W = 612, H = 792, M = 50, CW = W - 2 * M, DARK = hexRGB(t.dark), LIGHT = hexRGB(t.light);
+  let y = M;
+  const need = h => { if (y + h > H - 50){ doc.addPage(); y = M; } };
+  const para = (text, size, style, color, indent) => { doc.setFont("helvetica", style || "normal"); doc.setFontSize(size); doc.setTextColor(...(color || [26,26,26]));
+    doc.splitTextToSize(pdfText(text), CW - (indent || 0)).forEach(l=>{ need(size * 1.35); doc.text(l, M + (indent || 0), y + size); y += size * 1.35; }); };
+  // student page
+  doc.setFont("helvetica","normal"); doc.setFontSize(10.5); doc.setTextColor(60,60,60);
+  doc.text("Name ______________________________", M, y + 10); doc.text("Date ______________", W - M, y + 10, {align:"right"}); y += 30;
+  doc.setFillColor(...DARK); doc.rect(M, y, CW, 4, "F"); y += 12;
+  para(ws.title, 18, "bold", DARK); y += 2;
+  para(`${P_TYPES[ws.type].name}  |  ${gradeName(ws.grade)}${ws.std ? "  |  " + ws.std : ""}`, 9.5, "normal", [110,110,110]); y += 6;
+  para(ws.directions, 11, "italic"); y += 8;
+  if (ws.passage){ need(40); const start = y; y += 8; para(ws.passage, 11, "normal", null, 10); doc.setDrawColor(...hexRGB(t.border)); doc.rect(M, start, CW, y - start + 6); y += 16; }
+  if (ws.example){
+    const start = y; doc.setFillColor(...LIGHT); need(60);
+    const lines = [["bold","Example"], ["normal", ws.example.q], ...(ws.example.steps ? [["normal", ws.example.steps]] : []), ["bold","Answer: " + ws.example.a]];
+    const est = lines.reduce((h,[s,tx])=>h + doc.splitTextToSize(pdfText(tx), CW - 20).length * 14, 12);
+    doc.rect(M, y, CW, est, "F"); y += 6; lines.forEach(([s, tx])=>para(tx, 11, s, s==="bold"?DARK:null, 10)); y = Math.max(y, start + est) + 12;
+  }
+  ws.problems.forEach((p, i)=>{
+    const qLines = doc.splitTextToSize(pdfText(p.q), CW - 110);
+    const space = p.choices ? 14 : (ws.type === "testprep" ? 10 : (p.q.length > 60 ? 70 : 42));
+    need(qLines.length * 15 + (p.choices ? 40 : 0) + space);
+    doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor(...DARK); doc.text(`${i + 1})`, M, y + 12);
+    doc.setFont("helvetica","normal"); doc.setTextColor(26,26,26);
+    qLines.forEach((l, j)=>doc.text(l, M + 24, y + 12 + j * 15));
+    if (!p.choices){ doc.setTextColor(90,90,90); doc.text("________", W - M, y + 12, {align:"right"}); }
+    y += qLines.length * 15 + 4;
+    if (p.choices){
+      const colW = (CW - 24) / 2;
+      p.choices.forEach((c, j)=>{ const cx = M + 24 + (j % 2) * colW, cy = y + 12 + Math.floor(j / 2) * 16; doc.setFont("helvetica","bold"); doc.text("ABCD"[j] + ".", cx, cy); doc.setFont("helvetica","normal"); doc.text(doc.splitTextToSize(pdfText(c), colW - 24)[0], cx + 16, cy); });
+      y += Math.ceil(p.choices.length / 2) * 16 + 4;
+      doc.setTextColor(90,90,90); doc.text("Answer: ______", M + 24, y + 10); y += 14;
+    }
+    y += space;
+  });
+  if (ws.extension){ y += 4; para("Challenge", 12, "bold", DARK); para(ws.extension, 11); doc.setDrawColor(200,200,200); need(90); doc.rect(M, y + 4, CW, 80); y += 96; }
+  if (ws.answerBox){
+    const cols = 4, rows = Math.ceil(ws.problems.length / cols), bh = 30 + rows * 24;
+    need(bh + 10); doc.setDrawColor(...DARK); doc.setLineWidth(1.2); doc.rect(M, y, CW, bh);
+    doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(...DARK); doc.text("Answer box", M + 10, y + 18);
+    doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(110,110,110); doc.text("Copy your final answers here.", M + 80, y + 18);
+    doc.setFontSize(12); doc.setTextColor(26,26,26);
+    ws.problems.forEach((p, i)=>{ const c = i % cols, rr = Math.floor(i / cols); doc.text(`${i + 1}) ________`, M + 12 + c * (CW / cols), y + 42 + rr * 24); });
+    y += bh + 10;
+  }
+  // answer key page
+  doc.addPage(); y = M;
+  para("Answer key", 18, "bold", DARK); para(ws.title, 10, "normal", [110,110,110]); y += 10;
+  ws.problems.forEach((p, i)=>{ para(`${i + 1})  ${p.a}${p.value ? "  (" + p.value + ")" : ""}${p.std ? "     [" + p.std + "]" : ""}`, 11.5, "normal"); });
+  const n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++){ doc.setPage(i); doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(140,140,140); doc.text(pdfText(ws.title + (i === n ? "  |  Answer key" : "")), M, H - 26); doc.text(`Page ${i} of ${n}`, W - M, H - 26, {align:"right"}); }
+  return doc.output("blob");
+}
+
+/* --- events --- */
+document.getElementById("newWorksheet").addEventListener("click", ()=>newWorksheet());
+document.getElementById("practiceList").addEventListener("click", e=>{ const b = e.target.closest("[data-ws]"); if (!b) return; P.cur = b.dataset.ws; P.msg = null; P.confirm = null; renderPractice(); });
+pView.addEventListener("input", e=>{
+  const t = e.target, ws = pCur(); if (!ws || !t.dataset.pw || t.type === "checkbox" || t.tagName === "SELECT") return;
+  if (t.dataset.pw === "title"){ ws.title = t.value; ws.autoTitle = !t.value.trim(); } else ws[t.dataset.pw] = t.value;
+  ws.updatedAt = Date.now(); pSave(); if (t.dataset.pw === "title") renderPracticeList();
+});
+pView.addEventListener("change", e=>{
+  const t = e.target, ws = pCur(); if (!ws) return;
+  if (t.name === "w-src"){ ws.source = t.value; pSave(); return renderPractice(); }
+  if (t.id === "w-reteach"){ const x = reteachList().find(r=>r.s === t.value); if (x){ ws.std = x.s; ws.type = ws.type === "finisher" ? "practice" : ws.type; ws.group = `Reteach group for ${x.s}: ${[...x.ny, ...x.ap].join(", ")}`; ws.title = `Reteach: ${x.s}`; ws.autoTitle = false; const g = PGENS.find(g=>Object.values(g.std).includes(x.s)); if (g) ws.genId = g.id; else if (S.sample || SETTINGS.apiKey) ws.source = "claude"; pSave(); renderPractice(); } return; }
+  if (t.dataset.pw && (t.tagName === "SELECT" || t.type === "checkbox")){ ws[t.dataset.pw] = t.type === "checkbox" ? t.checked : t.value; ws.updatedAt = Date.now(); pSave(); renderPractice(); }
+});
+pView.addEventListener("click", async e=>{
+  const rt = e.target.closest("[data-reteach]");
+  if (rt){ const x = reteachList().find(r=>r.s === rt.dataset.reteach); const g = PGENS.find(g=>Object.values(g.std).includes(x.s));
+    newWorksheet({std:x.s, title:`Reteach: ${x.s}`, autoTitle:false, group:`Reteach group for ${x.s}: ${[...x.ny, ...x.ap].join(", ")}`, genId: g ? g.id : "decas", source: g || !(S.sample || SETTINGS.apiKey) ? "free" : "claude"}); return; }
+  const pt = e.target.closest("[data-ptype]");
+  const ws = pCur();
+  if (pt && ws){ ws.type = pt.dataset.ptype; ws.updatedAt = Date.now(); pSave(); return renderPractice(); }
+  const act = e.target.closest("[data-pact]")?.dataset.pact; if (!act) return;
+  if (act === "new") return newWorksheet();
+  if (!ws) return;
+  if (act === "make") return makeWorksheet();
+  if (act === "send") return sendToGrade();
+  if (act === "del"){ P.confirm = true; return renderPractice(); }
+  if (act === "cancel"){ P.confirm = null; return renderPractice(); }
+  if (act === "del-yes"){ P.list.delete(P.cur); P.cur = pSorted()[0]?.[0] || null; P.confirm = null; pSave(); return renderPractice(); }
+  const i = +e.target.closest("[data-i]")?.dataset.i;
+  if (act === "rm"){ ws.problems.splice(i, 1); pSave(); return renderPractice(); }
+  if (act === "reroll"){ const one = freeProblems({...ws, count:1}).problems[0]; if (one){ ws.problems[i] = one; pSave(); } return renderPractice(); }
+  if (act === "pdf"){
+    try { await loadScript(JSPDF); const blob = buildWorksheetPdf(ws); const r = await S.downloads.save({filename: fileBase({title:ws.title}) + ".pdf", data: blob}); P.msg = r.status === "saved" ? {text:"Downloaded the worksheet and answer key."} : null; }
+    catch(err){ if (!(err && err.code === "declined")) P.msg = {text:"Couldn't make the PDF. Check your connection and try again.", err:true}; }
+    return renderPractice();
+  }
+});
+pLoad(); P.cur = pSorted()[0]?.[0] || null;
+
 /* ---------- navigation ---------- */
 function showView(v){
-  if (!["plans","grade","data","settings"].includes(v)) v = "plans";
+  if (!["plans","practice","grade","data","settings"].includes(v)) v = "plans";
+  $("#practiceView").hidden = v !== "practice";
   $("#plansView").hidden = v !== "plans"; $("#gradeView").hidden = v !== "grade"; sView.hidden = v !== "settings"; dView.hidden = v !== "data";
   document.querySelectorAll(".topnav [data-nav]").forEach(b=>b.setAttribute("aria-current", b.dataset.nav === v ? "page" : "false"));
-  if (v === "plans") renderMain(); else if (v === "grade") renderGrade(); else if (v === "data") renderData(); else { S.setMsg = null; renderSettings(); }
+  if (v === "plans") renderMain(); else if (v === "grade") renderGrade(); else if (v === "data") renderData(); else if (v === "practice") renderPractice(); else { S.setMsg = null; renderSettings(); }
   try { history.replaceState(null, "", v === "plans" ? location.pathname + location.search : "#" + v); } catch(e){}
 }
 document.addEventListener("click", e=>{ const n = e.target.closest("[data-nav]"); if (n && n.tagName === "BUTTON" && !n.closest(".view-toggle")){ showView(n.dataset.nav); window.scrollTo(0,0); } });
@@ -1646,7 +2101,7 @@ if (window.claude && typeof window.claude.use === "function"){
   S.downloads = browserDownloads;
   startLocal();
 }
-if (/^#(grade|data|settings)$/.test(location.hash)) showView(location.hash.slice(1));
+if (/^#(practice|grade|data|settings)$/.test(location.hash)) showView(location.hash.slice(1));
 })();
 </script>
 
