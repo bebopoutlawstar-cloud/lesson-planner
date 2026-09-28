@@ -24,6 +24,14 @@ Live site: https://bebopoutlawstar-cloud.github.io/lesson-planner/
 
 Answers the app can't read are marked **Unclear** so you can check them yourself.
 
+## Standards data
+
+- Tag each answer-key line with its standard in brackets: `3) 1.56 (2 pts) [5.NBT.B.7]`. Or fill in **Standard for untagged questions** when a whole quiz covers one standard.
+- After grading, each assignment shows every standard as **Met**, **Approaching** or **Not yet**, with the students in each group, and a **Standards CSV** download.
+- The **Data** page combines every graded assignment into a student × standard grid, a list of standards to reteach as a class, and reteach groups for each standard. Filter by subject and grade, and download it as a CSV.
+- Cutoffs default to Met ≥ 80% and Approaching ≥ 60%; change them in Settings. Answers marked Unclear are left out until you mark them.
+- Students are matched by name across assignments, so type names the same way each time.
+
 ### Two ways to grade (choose in Settings)
 
 - **Free text reader (default):** runs in your browser with [Tesseract.js](https://github.com/naptha/tesseract.js). No key, no cost, and photos never leave your computer. Best for typed worksheets or neat print with answers numbered like `1) 16.25`, one per line. It understands equivalent numbers (1/2 = 0.5), multiple-choice letters, and small spelling slips, but not messy handwriting, long written answers, or partial credit.

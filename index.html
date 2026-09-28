@@ -226,6 +226,35 @@ input:focus,textarea:focus{outline:none;border-color:var(--t-mid);box-shadow:0 0
 .qmark.unclear{background:var(--surface-2);color:var(--ink-2);border-color:var(--line)}
 .fb{padding:10px 14px;display:flex;flex-direction:column;gap:6px}
 .teacher-note{font-size:13px;color:var(--ink-2)}
+.muted-s{font-size:11.5px;color:var(--muted);font-weight:500}
+.kbd{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.band{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.band.met{background:#E3F4E5;color:#1E6B28}
+.band.approach{background:#FFF4D6;color:#8A5A00}
+.band.notyet{background:#FDE7E7;color:#A32020}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.grp-line{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:3px 0}
+.kid{font-size:12.5px;background:var(--surface-2);border-radius:6px;padding:2px 7px}
+.kid small{color:var(--muted);font-variant-numeric:tabular-nums}
+.std-block{display:flex;flex-direction:column;gap:4px}
+.matrix-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.matrix{border-collapse:collapse;font-size:13px;min-width:100%}
+.matrix th,.matrix td{padding:8px 10px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);text-align:center;white-space:nowrap}
+.matrix thead th{background:var(--surface-2);font-size:12px;vertical-align:bottom}
+.matrix tbody th{text-align:left;position:sticky;left:0;background:var(--surface);font-weight:600;z-index:1}
+.matrix thead th:first-child{position:sticky;left:0;z-index:2;text-align:left}
+.matrix td{font-variant-numeric:tabular-nums;font-weight:700}
+.matrix td.met{background:#E3F4E5;color:#1E6B28}
+.matrix td.approach{background:#FFF4D6;color:#8A5A00}
+.matrix td.notyet{background:#FDE7E7;color:#A32020}
+.matrix td.na{color:var(--muted);font-weight:400}
+.grp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.grp-card{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+:root[data-theme="dark"] .band.met,:root[data-theme="dark"] .matrix td.met{background:#173D1D;color:#8FD69A}
+:root[data-theme="dark"] .band.approach,:root[data-theme="dark"] .matrix td.approach{background:#45360F;color:#F2CD73}
+:root[data-theme="dark"] .band.notyet,:root[data-theme="dark"] .matrix td.notyet{background:#4A1C1C;color:#F4A3A3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .band.met,:root:not([data-theme="light"]) .matrix td.met{background:#173D1D;color:#8FD69A}:root:not([data-theme="light"]) .band.approach,:root:not([data-theme="light"]) .matrix td.approach{background:#45360F;color:#F2CD73}:root:not([data-theme="light"]) .band.notyet,:root:not([data-theme="light"]) .matrix td.notyet{background:#4A1C1C;color:#F4A3A3}}
+#dataView,#settingsView{display:block}
 .set-wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .keyrow{display:flex;gap:8px;flex-wrap:wrap}
 .keyrow input{flex:1 1 260px}
@@ -272,6 +301,7 @@ input[type=password]{width:100%;border:1px solid var(--line);background:var(--bg
     <nav class="topnav" aria-label="Sections">
       <button type="button" data-nav="plans" aria-current="page">Plans</button>
       <button type="button" data-nav="grade">Grade work</button>
+      <button type="button" data-nav="data">Data</button>
       <button type="button" data-nav="settings">Settings</button>
     </nav>
     <div class="status" id="status" data-s="idle" role="status" aria-live="polite">Loading your plans…</div>
@@ -301,6 +331,7 @@ input[type=password]{width:100%;border:1px solid var(--line);background:var(--bg
     <main id="gmain"></main>
   </div>
 
+  <main id="dataView" hidden></main>
   <main id="settingsView" hidden></main>
 </div>
 
@@ -1021,7 +1052,7 @@ function renderGrade(){
     <div class="ph-row">
       <input id="g-name" class="title-input" type="text" data-ga="name" value="${esc(a.name)}" aria-label="Assignment name" placeholder="Assignment name" style="font-family:var(--display);font-weight:700;font-size:24px;border:0;background:none;padding:2px 0;flex:1 1 280px">
       <div class="actions">
-        ${S.downloads && results.length ? `<button class="btn" type="button" data-gact="csv">${icon("sheet")} Scores CSV</button>`:""}
+        ${S.downloads && results.length ? `<button class="btn" type="button" data-gact="csv">${icon("sheet")} Scores CSV</button><button class="btn" type="button" data-gact="stdcsv">${icon("sheet")} Standards CSV</button>`:""}
         ${G.confirm==="assign" ? `<span class="confirm">Delete this assignment and its results?<button class="btn danger-solid" type="button" data-gact="del-yes">Delete</button><button class="btn ghost" type="button" data-gact="cancel">Keep it</button></span>` : `<button class="btn ghost danger" type="button" data-gact="del">Delete</button>`}
       </div>
     </div>
@@ -1033,10 +1064,11 @@ function renderGrade(){
     <h2><span class="step">1</span>Answer key</h2>
     <div class="grid2">
       <div class="field"><label for="g-grade">Grade</label><select id="g-grade" data-ga="grade">${GRADES.map(g=>`<option value="${g}"${a.grade===g?" selected":""}>${gradeName(g)}</option>`).join("")}</select></div>
+      <div class="field"><label for="g-std">Standard for untagged questions <span class="opt">optional</span></label><input id="g-std" type="text" data-ga="defaultStd" value="${esc(a.defaultStd||"")}" placeholder="5.NBT.B.7"></div>
       <div class="field"><label for="g-subject">Subject</label><select id="g-subject" data-ga="subject">${Object.entries(THEMES).map(([k,v])=>`<option value="${k}"${a.subject===k?" selected":""}>${esc(v.name)}</option>`).join("")}</select></div>
     </div>
-    <div class="field"><label for="g-key">Type the answers <span class="hint">One per line. Add points like "(2 pts)" if a question is worth more than 1.</span></label>
-      <textarea id="g-key" data-ga="keyText" rows="5" placeholder="1) 16.25&#10;2) 7.17&#10;3) 1.56 (2 pts)&#10;4) Accept any sentence that uses the word &quot;regroup&quot; correctly">${esc(a.keyText)}</textarea></div>
+    <div class="field"><label for="g-key">Type the answers <span class="hint">One per line. Add points like "(2 pts)" and a standard in brackets like "[5.NBT.B.7]".</span></label>
+      <textarea id="g-key" data-ga="keyText" rows="5" placeholder="1) 16.25 [5.NBT.B.7]&#10;2) 7.17 [5.NBT.B.7]&#10;3) 1.56 (2 pts) [5.NBT.B.7]&#10;4) Accept any sentence that uses the word &quot;regroup&quot; correctly">${esc(a.keyText)}</textarea></div>
     <div class="field"><span class="lab">Or upload the answer key <span class="hint">Photos or a PDF. Uploaded files aren't saved, so add them again after reloading.</span></span>
       <label class="drop" data-dropfor="key"><input type="file" accept="image/*,application/pdf" multiple data-filefor="key"><span><b>Choose files</b> or drop them here</span></label>
       ${kf.length?`<div class="thumbs">${kf.map((f,i)=>thumbHTML(f,i,"key")).join("")}</div>`:""}
@@ -1079,6 +1111,7 @@ function renderGrade(){
     <h2><span class="step">3</span>Results</h2>
     <p class="card-sub">Click a mark to change it (correct → incorrect → partial). Scores update right away.</p>
     ${summary}
+    ${standardsHTML(a)}
     ${results.map(st=>resultHTML(st)).join("")}
   </section>` : ""}`;
   gmain.querySelectorAll("textarea").forEach(grow);
@@ -1090,6 +1123,7 @@ function resultHTML(st){
       <div class="actions"><span class="score">${sc.earned} / ${sc.possible}<small>${sc.pct}%</small></span>
       ${sc.unclear?`<span class="pill run">${sc.unclear} to review</span>`:""}
       <button class="btn ghost" type="button" data-regrade="${st.id}" ${(G.stuFiles.get(st.id)||[]).length && !G.running?"":"disabled"} title="${(G.stuFiles.get(st.id)||[]).length?"Grade this paper again":"Add the photos again to regrade"}">Regrade</button></div></div>
+    ${stdChips(gCur(), st) ? `<div style="padding:10px 14px 0">${stdChips(gCur(), st)}</div>` : ""}
     <div class="qtable-wrap"><table class="qtable"><thead><tr><th>Q</th><th>Student wrote</th><th>Answer key</th><th>Mark</th><th>Points</th><th>Note</th></tr></thead><tbody>
       ${(r.questions||[]).map((q,i)=>`<tr><td class="num">${esc(q.q)}</td><td>${esc(q.student_answer)}</td><td>${esc(q.correct_answer)}</td>
         <td><button type="button" class="qmark ${esc(q.result)}" data-mark="${st.id}" data-i="${i}">${q.result==="correct"?"✓ Correct":q.result==="incorrect"?"✗ Incorrect":q.result==="partial"?"½ Partial":"? Unclear"}</button></td>
@@ -1139,11 +1173,12 @@ Grading rules:
 - Partial credit: ${a.rules.partial ? "allowed when work shows a correct method with a small slip, or a multi-part answer is partly right" : "not allowed; each question is fully right or wrong"}.
 - Spelling mistakes: ${a.rules.spelling ? "ignore them when the meaning is clearly right" : "count them only if the key requires exact spelling"}.
 - Point values: use any points given in the key (like "(2 pts)"); otherwise each question is worth 1 point.
+- Text in square brackets in the key (like "[5.NBT.B.7]") is the question's standard, not part of the answer. Copy it into "standard".
 - If you cannot read a student's handwriting with confidence, mark it "unclear" with 0 points and describe what you see. Never guess a student's answer.
 - Include every question from the answer key, even if the student left it blank (blank = incorrect, student_answer "(blank)").
 
 Reply with ONLY a JSON object, no other text:
-{"questions":[{"q":"1","student_answer":"what the student wrote","correct_answer":"from the key","result":"correct|incorrect|partial|unclear","points_earned":1,"points_possible":1,"note":"short reason, especially for wrong or partial answers"}],
+{"questions":[{"q":"1","student_answer":"what the student wrote","correct_answer":"from the key","result":"correct|incorrect|partial|unclear","points_earned":1,"points_possible":1,"note":"short reason, especially for wrong or partial answers","standard":"the bracketed standard for this question, or empty"}],
 "feedback":"2-3 sentences written to the student, kind and specific, at a ${gradeOrd(a.grade)} reading level: one thing done well and one thing to fix",
 "teacher_notes":"one sentence on patterns or misconceptions for the teacher"}`;
 }
@@ -1188,11 +1223,13 @@ function parseKey(text){
   const map = new Map();
   String(text).split("\n").forEach(line=>{
     const m = line.match(Q_RE); if (!m || map.has(m[1])) return;
-    let ans = m[2], pts = 1;
+    let ans = m[2], pts = 1, std = "";
+    const sm = ans.match(/\[([^\]]+)\]/);
+    if (sm){ std = sm[1].trim(); ans = ans.replace(sm[0], ""); }
     const pm = ans.match(/\(\s*(\d+(?:\.\d+)?)\s*(?:pts?|points?)\s*\)/i);
     if (pm){ pts = +pm[1]; ans = ans.replace(pm[0], ""); }
     ans = ans.trim();
-    map.set(m[1], {answer:ans, alts: ans.split(/\s+or\s+|\s*\|\s*/i).map(s=>s.trim()).filter(Boolean), pts});
+    map.set(m[1], {std, answer:ans, alts: ans.split(/\s+or\s+|\s*\|\s*/i).map(s=>s.trim()).filter(Boolean), pts});
   });
   return map;
 }
@@ -1274,7 +1311,7 @@ async function gradeOne(a, st){
   if (!Array.isArray(out.questions)) throw {message:"Claude's answer was missing the question list. Try again."};
   out.questions = out.questions.map(q=>({q:String(q.q ?? ""), student_answer:String(q.student_answer ?? ""), correct_answer:String(q.correct_answer ?? ""),
     result:["correct","incorrect","partial","unclear"].includes(q.result) ? q.result : "unclear",
-    points_earned: Math.max(0, +q.points_earned || 0), points_possible: Math.max(0, +q.points_possible || (q.points_possible===0?0:1)), note:String(q.note ?? "")}));
+    points_earned: Math.max(0, +q.points_earned || 0), points_possible: Math.max(0, +q.points_possible || (q.points_possible===0?0:1)), note:String(q.note ?? ""), standard:String(q.standard ?? "")}));
   out.feedback = String(out.feedback || ""); out.teacher_notes = String(out.teacher_notes || "");
   return out;
 }
@@ -1332,6 +1369,7 @@ gmain.addEventListener("click", e=>{
   if (act === "regrade-all") return runGrading(true);
   if (act === "stop"){ G.stop = true; return; }
   if (act === "csv") return exportCSV();
+  if (act === "stdcsv") return exportStdCSV(a);
   if (act === "del"){ G.confirm = "assign"; return renderGrade(); }
   if (act === "cancel"){ G.confirm = null; return renderGrade(); }
   if (act === "del-yes"){ a.students.forEach(s=>G.stuFiles.delete(s.id)); G.keyFiles.delete(G.cur); G.list.delete(G.cur); G.cur = gSorted()[0]?.[0] || null; G.confirm = null; gSave(true); return renderGrade(); }
@@ -1382,6 +1420,14 @@ function renderSettings(){
     <div class="note">Don't have a key? Sign in at <b>console.anthropic.com</b>, add a few dollars of credit under Billing, then create a key under API Keys. Don't use this key on a shared computer.</div>
   </section>
   <section class="card">
+    <h2>Standards mastery</h2>
+    <p class="card-sub">Used on the Data page and in grading results.</p>
+    <div class="grid2">
+      <div class="field"><label for="s-met">Met at or above (%)</label><input id="s-met" type="text" inputmode="numeric" data-set="met" value="${esc(SETTINGS.met || 80)}"></div>
+      <div class="field"><label for="s-ap">Approaching at or above (%)</label><input id="s-ap" type="text" inputmode="numeric" data-set="approach" value="${esc(SETTINGS.approach || 60)}"></div>
+    </div>
+  </section>
+  <section class="card">
     <h2>Defaults for new plans</h2>
     <div class="grid2">
       <div class="field"><label for="s-school">School</label><input id="s-school" type="text" data-set="school" value="${esc(SETTINGS.school)}"></div>
@@ -1406,12 +1452,147 @@ sView.addEventListener("click", async e=>{
   }
 });
 
+/* ---------- standards mastery ---------- */
+function cutoffs(){ const met = +SETTINGS.met || 80, ap = Math.min(+SETTINGS.approach || 60, met); return {met, ap}; }
+function band(pct){ const c = cutoffs(); return pct >= c.met ? "met" : pct >= c.ap ? "approach" : "notyet"; }
+const BAND_LABEL = {met:"Met", approach:"Approaching", notyet:"Not yet"};
+function stdFor(a, q, keyMap){ return (keyMap.get(String(q.q))||{}).std || (q.standard||"").trim() || (a.defaultStd||"").trim() || "Untagged"; }
+/* Map standard -> {e, p, n} for one student's result; unclear answers are left out until reviewed */
+function stdScores(a, st, keyMap){
+  const m = new Map();
+  (st.result?.questions || []).forEach(q=>{
+    if (q.result === "unclear") return;
+    const s = stdFor(a, q, keyMap), o = m.get(s) || {e:0, p:0, n:0};
+    o.e += +q.points_earned || 0; o.p += +q.points_possible || 0; o.n++; m.set(s, o);
+  });
+  return m;
+}
+const pctOf = o => o.p ? Math.round(o.e / o.p * 100) : 0;
+function standardsHTML(a){
+  const keyMap = parseKey(a.keyText), graded = a.students.filter(s=>s.result);
+  const per = graded.map(st=>({st, m:stdScores(a, st, keyMap)}));
+  const stds = [...new Set(per.flatMap(x=>[...x.m.keys()]))].sort();
+  if (!stds.length) return "";
+  const onlyUntagged = stds.length === 1 && stds[0] === "Untagged";
+  const rows = stds.map(s=>{
+    const groups = {met:[], approach:[], notyet:[]}; let e = 0, p = 0, nq = 0;
+    per.forEach(({st, m})=>{ const o = m.get(s); if (!o) return; e += o.e; p += o.p; nq = Math.max(nq, o.n); groups[band(pctOf(o))].push({name: st.name || "Student", pct: pctOf(o)}); });
+    const classPct = p ? Math.round(e / p * 100) : 0, cls = band(classPct);
+    return `<tr><td><b>${esc(s)}</b><div class="muted-s">${nq} question${nq===1?"":"s"}</div></td>
+      <td class="num">${classPct}%</td><td><span class="band ${cls}">${BAND_LABEL[cls]}</span></td>
+      <td>${["met","approach","notyet"].map(b=>groups[b].length ? `<div class="grp-line"><span class="band ${b}">${BAND_LABEL[b]} · ${groups[b].length}</span> ${groups[b].map(x=>`<span class="kid">${esc(x.name)} <small>${x.pct}%</small></span>`).join(" ")}</div>` : "").join("")}</td></tr>`;
+  }).join("");
+  const c = cutoffs();
+  return `<div class="std-block">
+    <div class="lab" style="margin-bottom:6px">Standards mastery <span class="hint">Met ≥ ${c.met}% · Approaching ≥ ${c.ap}% · change the cutoffs in Settings</span></div>
+    ${onlyUntagged ? `<div class="note">Tag questions with a standard to see mastery by standard. In the answer key, add it in brackets: <code class="kbd">3) 1.56 [5.NBT.B.7]</code>, or fill in "Standard for untagged questions".</div>` : ""}
+    <div class="qtable-wrap"><table class="qtable"><thead><tr><th>Standard</th><th>Class</th><th>Status</th><th>Students (Approaching and Not yet are your reteach groups)</th></tr></thead><tbody>${rows}</tbody></table></div>
+  </div>`;
+}
+function stdChips(a, st){
+  const m = stdScores(a, st, parseKey(a.keyText));
+  if (!m.size || (m.size === 1 && m.has("Untagged"))) return "";
+  return `<div class="chips">${[...m.entries()].sort().map(([s,o])=>{ const p = pctOf(o); return `<span class="band ${band(p)}" title="${o.e} of ${o.p} points">${esc(s)}: ${p}%</span>`; }).join("")}</div>`;
+}
+function exportStdCSV(a){
+  const keyMap = parseKey(a.keyText), graded = a.students.filter(s=>s.result);
+  const per = graded.map(st=>({st, m:stdScores(a, st, keyMap)}));
+  const stds = [...new Set(per.flatMap(x=>[...x.m.keys()]))].sort();
+  const rows = [["Student", ...stds.flatMap(s=>[s + " %", s + " status"])]];
+  per.forEach(({st, m})=>rows.push([st.name, ...stds.flatMap(s=>{ const o = m.get(s); return o ? [pctOf(o), BAND_LABEL[band(pctOf(o))]] : ["",""]; })]));
+  saveCSV(rows, fileBase({title:a.name}) + "_standards.csv");
+}
+function saveCSV(rows, filename){
+  const csv = rows.map(r=>r.map(v=>{ v = String(v ?? ""); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; }).join(",")).join("\r\n");
+  S.downloads.save({filename, data: new Blob(["﻿" + csv], {type:"text/csv"})}).catch(()=>{});
+}
+
+/* ---------- Data view: standards across every graded assignment ---------- */
+const D = {subject:"all", grade:"all"};
+const dView = document.getElementById("dataView");
+function dataModel(){
+  const students = new Map(), stds = new Map(), tests = [];
+  gSorted().reverse().forEach(([id, a])=>{
+    if (D.subject !== "all" && a.subject !== D.subject) return;
+    if (D.grade !== "all" && a.grade !== D.grade) return;
+    const graded = a.students.filter(s=>s.result); if (!graded.length) return;
+    tests.push(a.name || "Untitled");
+    const keyMap = parseKey(a.keyText);
+    graded.forEach(st=>{
+      const k = (st.name || "").trim().toLowerCase() || st.id;
+      const row = students.get(k) || {name: (st.name||"Student").trim(), cells:new Map()};
+      stdScores(a, st, keyMap).forEach((o, s)=>{
+        if (s === "Untagged") return;
+        const c = row.cells.get(s) || {e:0, p:0, tests:[]}; c.e += o.e; c.p += o.p; c.tests.push(`${a.name}: ${pctOf(o)}%`); row.cells.set(s, c);
+        stds.set(s, (stds.get(s)||0) + 1);
+      });
+      students.set(k, row);
+    });
+  });
+  return {students:[...students.values()].sort((x,y)=>x.name.localeCompare(y.name)), stds:[...stds.keys()].sort(), tests};
+}
+function renderData(){
+  const t = THEMES[D.subject] || THEMES.math, r = document.documentElement.style;
+  r.setProperty("--t-dark","#"+t.dark); r.setProperty("--t-mid","#"+t.mid); r.setProperty("--t-light","#"+t.light); r.setProperty("--t-border","#"+t.border);
+  const md = dataModel(), c = cutoffs();
+  const filters = `<div class="actions">
+      <label class="grade-pick"><span>Subject</span><select id="d-subject">${[["all","All subjects"],...Object.entries(THEMES).map(([k,v])=>[k,v.name])].map(([k,n])=>`<option value="${k}"${D.subject===k?" selected":""}>${esc(n)}</option>`).join("")}</select></label>
+      <label class="grade-pick"><span>Grade</span><select id="d-grade"><option value="all">All</option>${GRADES.map(g=>`<option value="${g}"${D.grade===g?" selected":""}>${g}</option>`).join("")}</select></label>
+      ${md.stds.length ? `<button class="btn" type="button" data-dact="csv">${icon("sheet")} Download CSV</button>` : ""}
+    </div>`;
+  if (!md.stds.length){
+    dView.innerHTML = `<div class="set-wrap" style="max-width:none"><section class="card"><div class="ph-row"><h2 style="font-size:22px">Standards data</h2>${filters}</div>
+      <div class="empty-state" style="border:0;padding:24px 8px"><p>No tagged, graded questions yet. In Grade work, tag each answer-key line with its standard, like <code class="kbd">3) 1.56 [5.NBT.B.7]</code>, and grade some papers. This page then shows every student's mastery of every standard across all your tests.</p></div></section></div>`;
+    return;
+  }
+  const colStats = md.stds.map(s=>{ let e = 0, p = 0, met = 0, n = 0; md.students.forEach(row=>{ const cl = row.cells.get(s); if (!cl) return; e += cl.e; p += cl.p; n++; if (band(pctOf(cl)) === "met") met++; }); return {s, pct: p ? Math.round(e/p*100) : 0, met, n}; });
+  const needs = colStats.filter(x=>band(x.pct) !== "met").sort((x,y)=>x.pct-y.pct);
+  dView.innerHTML = `<div class="set-wrap" style="max-width:none">
+  <section class="card">
+    <div class="ph-row"><h2 style="font-size:22px">Standards data</h2>${filters}</div>
+    <p class="card-sub">From ${md.tests.length} graded assignment${md.tests.length===1?"":"s"}. Each cell combines every question on that standard. Met ≥ ${c.met}%, Approaching ≥ ${c.ap}%. Students are matched by name across assignments.</p>
+    <div class="summary">
+      <div class="stat"><div class="k">Students</div><div class="v">${md.students.length}</div></div>
+      <div class="stat"><div class="k">Standards assessed</div><div class="v">${md.stds.length}</div></div>
+      <div class="stat"><div class="k">Standards met by class</div><div class="v">${colStats.filter(x=>band(x.pct)==="met").length}<span style="font-size:15px;color:var(--muted)"> / ${md.stds.length}</span></div></div>
+    </div>
+    ${needs.length ? `<div><div class="lab" style="margin-bottom:6px">Standards to reteach as a class</div><div class="chips">${needs.map(x=>`<span class="band ${band(x.pct)}">${esc(x.s)}: ${x.pct}%</span>`).join("")}</div></div>` : `<div class="note">The class has met every assessed standard.</div>`}
+  </section>
+  <section class="card">
+    <h2>Student × standard</h2>
+    <div class="matrix-wrap"><table class="matrix"><thead><tr><th>Student</th>${colStats.map(x=>`<th title="Class ${x.pct}% · ${x.met} of ${x.n} met">${esc(x.s)}<div class="muted-s">${x.pct}% · ${x.met}/${x.n} met</div></th>`).join("")}</tr></thead>
+    <tbody>${md.students.map(row=>`<tr><th>${esc(row.name)}</th>${md.stds.map(s=>{ const cl = row.cells.get(s); if (!cl) return `<td class="na">–</td>`; const p = pctOf(cl); return `<td class="cell ${band(p)}" title="${esc(cl.tests.join("\n"))}">${p}%</td>`; }).join("")}</tr>`).join("")}</tbody></table></div>
+  </section>
+  <section class="card">
+    <h2>Reteach groups</h2>
+    <div class="grp-grid">${colStats.map(x=>{
+      const ap = [], ny = [];
+      md.students.forEach(row=>{ const cl = row.cells.get(x.s); if (!cl) return; const b = band(pctOf(cl)); if (b === "approach") ap.push(row.name); if (b === "notyet") ny.push(row.name); });
+      return `<div class="grp-card"><b>${esc(x.s)}</b>
+        <div class="grp-line"><span class="band notyet">Not yet · ${ny.length}</span> ${ny.map(n=>`<span class="kid">${esc(n)}</span>`).join(" ") || '<span class="muted-s">none</span>'}</div>
+        <div class="grp-line"><span class="band approach">Approaching · ${ap.length}</span> ${ap.map(n=>`<span class="kid">${esc(n)}</span>`).join(" ") || '<span class="muted-s">none</span>'}</div></div>`;
+    }).join("")}</div>
+  </section></div>`;
+}
+dView.addEventListener("change", e=>{
+  if (e.target.id === "d-subject"){ D.subject = e.target.value; renderData(); }
+  if (e.target.id === "d-grade"){ D.grade = e.target.value; renderData(); }
+});
+dView.addEventListener("click", e=>{
+  if (e.target.closest("[data-dact=csv]")){
+    const md = dataModel();
+    const rows = [["Student", ...md.stds]];
+    md.students.forEach(row=>rows.push([row.name, ...md.stds.map(s=>{ const cl = row.cells.get(s); return cl ? pctOf(cl) + "% " + BAND_LABEL[band(pctOf(cl))] : ""; })]));
+    saveCSV(rows, "standards_data.csv");
+  }
+});
+
 /* ---------- navigation ---------- */
 function showView(v){
-  if (!["plans","grade","settings"].includes(v)) v = "plans";
-  $("#plansView").hidden = v !== "plans"; $("#gradeView").hidden = v !== "grade"; sView.hidden = v !== "settings";
+  if (!["plans","grade","data","settings"].includes(v)) v = "plans";
+  $("#plansView").hidden = v !== "plans"; $("#gradeView").hidden = v !== "grade"; sView.hidden = v !== "settings"; dView.hidden = v !== "data";
   document.querySelectorAll(".topnav [data-nav]").forEach(b=>b.setAttribute("aria-current", b.dataset.nav === v ? "page" : "false"));
-  if (v === "plans") renderMain(); else if (v === "grade") renderGrade(); else { S.setMsg = null; renderSettings(); }
+  if (v === "plans") renderMain(); else if (v === "grade") renderGrade(); else if (v === "data") renderData(); else { S.setMsg = null; renderSettings(); }
   try { history.replaceState(null, "", v === "plans" ? location.pathname + location.search : "#" + v); } catch(e){}
 }
 document.addEventListener("click", e=>{ const n = e.target.closest("[data-nav]"); if (n && n.tagName === "BUTTON" && !n.closest(".view-toggle")){ showView(n.dataset.nav); window.scrollTo(0,0); } });
@@ -1465,7 +1646,7 @@ if (window.claude && typeof window.claude.use === "function"){
   S.downloads = browserDownloads;
   startLocal();
 }
-if (/^#(grade|settings)$/.test(location.hash)) showView(location.hash.slice(1));
+if (/^#(grade|data|settings)$/.test(location.hash)) showView(location.hash.slice(1));
 })();
 </script>
 
