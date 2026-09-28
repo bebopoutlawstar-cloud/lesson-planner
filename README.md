@@ -1,4 +1,4 @@
-# Eggly Lesson Planner
+# 5th Grade Lesson Planner
 
 A gradual-release lesson planner for Legacy Traditional School, 5th grade. Plan a run of school days (I Do → We Do → You Do), see each day as a printable page as you type, and download the week as an Excel workbook or a printable PDF.
 
